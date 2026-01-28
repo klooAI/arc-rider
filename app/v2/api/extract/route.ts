@@ -20,8 +20,9 @@ export async function POST(req: NextRequest) {
     const arrayBuffer = await blob.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    const pdfParse = (await import("pdf-parse")).default;
-    const data = await pdfParse(buffer);
+    const pdfParse = await import("pdf-parse");
+    const parseFn = (pdfParse as any).default || pdfParse;
+    const data = await parseFn(buffer);
 
     const fullText = data.text || "";
     const chunks = smartChunk(fullText, 800);
