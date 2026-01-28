@@ -467,6 +467,12 @@ export default function HomePage() {
         <p className="text-base sm:text-lg text-gray-600 max-w-xl mx-auto">
           Focus on the things that matter.
         </p>
+        <a 
+          href="/v2" 
+          className="inline-block mt-3 text-sm text-indigo-600 hover:text-indigo-800 font-medium bg-indigo-50 px-4 py-2 rounded-full hover:bg-indigo-100 transition"
+        >
+          ✨ Try V2 with lightning-fast embeddings →
+        </a>
       </div>
 
       {/* Upload Section */}

@@ -1,0 +1,58 @@
+import { NextRequest, NextResponse } from "next/server";
+
+export const runtime = "nodejs";
+
+export async function POST(req: NextRequest) {
+  try {
+    const formData = await req.formData();
+    const file = formData.get("file");
+
+    if (!file || typeof file === "string") {
+      return NextResponse.json({ error: "No PDF file uploaded." }, { status: 400 });
+    }
+
+    const blob = file as Blob;
+    const MAX_SIZE = 50 * 1024 * 1024;
+    if (blob.size > MAX_SIZE) {
+      return NextResponse.json({ error: "File too large. Maximum size is 50MB." }, { status: 400 });
+    }
+
+    const arrayBuffer = await blob.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    const pdfParse = (await import("pdf-parse")).default;
+    const data = await pdfParse(buffer);
+
+    const fullText = data.text || "";
+    const chunks = smartChunk(fullText, 800);
+
+    return NextResponse.json({ chunks });
+  } catch (err: any) {
+    console.error("PDF extract error:", err);
+    return NextResponse.json({ error: err?.message || "Failed to extract PDF." }, { status: 500 });
+  }
+}
+
+function smartChunk(text: string, targetSize: number): string[] {
+  const paragraphs = text.split(/\n\s*\n/).filter(p => p.trim().length > 50);
+  const chunks: string[] = [];
+  let current = "";
+
+  for (const para of paragraphs) {
+    const cleaned = para.replace(/\s+/g, " ").trim();
+    if (!cleaned) continue;
+
+    if (current.length + cleaned.length > targetSize && current.length > 100) {
+      chunks.push(current.trim());
+      current = cleaned;
+    } else {
+      current += (current ? "\n\n" : "") + cleaned;
+    }
+  }
+
+  if (current.trim().length > 50) {
+    chunks.push(current.trim());
+  }
+
+  return chunks;
+}
