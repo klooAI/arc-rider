@@ -39,6 +39,21 @@ function chunkArray<T>(arr: T[], size: number): T[][] {
   return chunks;
 }
 
+// Process promises with controlled concurrency to avoid rate limits
+async function processWithConcurrency<T, R>(
+  items: T[],
+  concurrency: number,
+  processor: (item: T) => Promise<R>
+): Promise<R[]> {
+  const results: R[] = [];
+  for (let i = 0; i < items.length; i += concurrency) {
+    const batch = items.slice(i, i + concurrency);
+    const batchResults = await Promise.all(batch.map(processor));
+    results.push(...batchResults);
+  }
+  return results;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { interest, pages } = await req.json();
@@ -88,11 +103,10 @@ Return ONLY valid JSON in this exact format:
 
 Include ALL pages in your response, even those with score 0.`;
 
-    // Process in batches of 20 pages - run ALL batches in PARALLEL for speed
+    // Process in batches of 20 pages with controlled concurrency (4 at a time)
     const batches = chunkArray(pageObjects, 20);
 
-    // Process all batches concurrently
-    const batchPromises = batches.map(async (batch) => {
+    const processBatch = async (batch: typeof pageObjects): Promise<RelevanceResult[]> => {
       const userPayload = {
         userInterest: interest,
         pages: batch.map(p => ({ page: p.page, content: p.text })),
@@ -135,11 +149,12 @@ ${JSON.stringify(userPayload.pages, null, 2)}`,
           reason: typeof r.reason === "string" ? r.reason.trim() : "",
         };
       });
-    });
+    };
 
     let allRankings: RelevanceResult[];
     try {
-      const batchResults = await Promise.all(batchPromises);
+      // Process 4 batches at a time to balance speed vs rate limits
+      const batchResults = await processWithConcurrency(batches, 4, processBatch);
       allRankings = batchResults.flat();
     } catch (err) {
       console.error("GPT-4o-mini call failed:", err);
