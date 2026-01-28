@@ -416,21 +416,19 @@ export default function HomePage() {
     return groups.sort((a, b) => b.topScore - a.topScore);
   })();
 
-  // Format page/chapter range label
+  // Format page/chapter range label - always show chapter number for EPUBs
   function formatRangeLabel(group: RelevanceGroup): string {
     if (docType === "epub") {
       const startIdx = group.startPage - 1;
-      const endIdx = group.endPage - 1;
       const startTitle = chapters[startIdx]?.trim() || "";
-      const endTitle = chapters[endIdx]?.trim() || "";
 
       if (group.startPage === group.endPage) {
-        return startTitle || `Chapter ${group.startPage}`;
+        // Single chapter: "Chapter 12: Title" or just "Chapter 12"
+        return startTitle 
+          ? `Chapter ${group.startPage}: ${startTitle}`
+          : `Chapter ${group.startPage}`;
       }
-      if (startTitle && endTitle && startTitle !== endTitle) {
-        return `${startTitle} – ${endTitle}`;
-      }
-      if (startTitle) return `${startTitle} (to chapter ${group.endPage})`;
+      // Range of chapters: "Chapters 12-15"
       return `Chapters ${group.startPage}–${group.endPage}`;
     }
 

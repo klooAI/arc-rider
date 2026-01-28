@@ -88,68 +88,43 @@ Return ONLY valid JSON in this exact format:
 
 Include ALL pages in your response, even those with score 0.`;
 
-    const allRankings: RelevanceResult[] = [];
-
-    // Process in batches of 20 pages for better context
+    // Process in batches of 20 pages - run ALL batches in PARALLEL for speed
     const batches = chunkArray(pageObjects, 20);
 
-    for (const batch of batches) {
+    // Process all batches concurrently
+    const batchPromises = batches.map(async (batch) => {
       const userPayload = {
         userInterest: interest,
         pages: batch.map(p => ({ page: p.page, content: p.text })),
       };
 
-      let content: string | null = null;
-
-      try {
-        const completion = await client.chat.completions.create({
-          model: "gpt-4o-mini",
-          temperature: 0.1,
-          max_tokens: 4000,
-          response_format: { type: "json_object" },
-          messages: [
-            { role: "system", content: systemPrompt },
-            {
-              role: "user",
-              content: `User is interested in: "${interest}"
+      const completion = await client.chat.completions.create({
+        model: "gpt-4o-mini",
+        temperature: 0.1,
+        max_tokens: 4000,
+        response_format: { type: "json_object" },
+        messages: [
+          { role: "system", content: systemPrompt },
+          {
+            role: "user",
+            content: `User is interested in: "${interest}"
 
 Analyze each page and score its relevance to this topic. Remember to use semantic understanding - match concepts, not just keywords.
 
 ${JSON.stringify(userPayload.pages, null, 2)}`,
-            },
-          ],
-        });
+          },
+        ],
+      });
 
-        content = completion.choices[0]?.message?.content ?? null;
-      } catch (err) {
-        console.error("GPT-4o-mini call failed:", err);
-        return NextResponse.json(
-          { error: "Failed to analyze document. Please try again." },
-          { status: 500 }
-        );
-      }
-
+      const content = completion.choices[0]?.message?.content ?? null;
       if (!content) {
-        return NextResponse.json(
-          { error: "No response from analysis. Please try again." },
-          { status: 500 }
-        );
+        throw new Error("No response from analysis");
       }
 
-      let parsed: { rankings?: any[] };
-      try {
-        parsed = JSON.parse(content);
-      } catch (err) {
-        console.error("JSON parse failure:", content);
-        return NextResponse.json(
-          { error: "Failed to parse analysis results." },
-          { status: 500 }
-        );
-      }
-
+      const parsed = JSON.parse(content);
       const rawRankings = Array.isArray(parsed.rankings) ? parsed.rankings : [];
 
-      const rankings: RelevanceResult[] = rawRankings.map((r, idx) => {
+      return rawRankings.map((r: any, idx: number) => {
         const page = typeof r.page === "number" ? r.page : batch[idx]?.page ?? idx + 1;
         const numericScore = Number(r.score);
         const safeScore = Number.isNaN(numericScore) ? 0 : Math.max(0, Math.min(100, numericScore));
@@ -160,8 +135,18 @@ ${JSON.stringify(userPayload.pages, null, 2)}`,
           reason: typeof r.reason === "string" ? r.reason.trim() : "",
         };
       });
+    });
 
-      allRankings.push(...rankings);
+    let allRankings: RelevanceResult[];
+    try {
+      const batchResults = await Promise.all(batchPromises);
+      allRankings = batchResults.flat();
+    } catch (err) {
+      console.error("GPT-4o-mini call failed:", err);
+      return NextResponse.json(
+        { error: "Failed to analyze document. Please try again." },
+        { status: 500 }
+      );
     }
 
     // Sort by score descending
