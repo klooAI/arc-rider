@@ -50,8 +50,34 @@ async function processWithConcurrency<T, R>(
     const batch = items.slice(i, i + concurrency);
     const batchResults = await Promise.all(batch.map(processor));
     results.push(...batchResults);
+    // Small delay between groups to avoid rate limits
+    if (i + concurrency < items.length) {
+      await new Promise(resolve => setTimeout(resolve, 200));
+    }
   }
   return results;
+}
+
+// Retry with exponential backoff
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  maxRetries = 3,
+  baseDelay = 1000
+): Promise<T> {
+  let lastError: Error | null = null;
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (err: any) {
+      lastError = err;
+      console.error(`Attempt ${attempt + 1} failed:`, err?.message || err);
+      if (attempt < maxRetries - 1) {
+        const delay = baseDelay * Math.pow(2, attempt);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+  throw lastError;
 }
 
 export async function POST(req: NextRequest) {
@@ -107,59 +133,61 @@ Include ALL pages in your response, even those with score 0.`;
     const batches = chunkArray(pageObjects, 20);
 
     const processBatch = async (batch: typeof pageObjects): Promise<RelevanceResult[]> => {
-      const userPayload = {
-        userInterest: interest,
-        pages: batch.map(p => ({ page: p.page, content: p.text })),
-      };
+      return withRetry(async () => {
+        const userPayload = {
+          userInterest: interest,
+          pages: batch.map(p => ({ page: p.page, content: p.text })),
+        };
 
-      const completion = await client.chat.completions.create({
-        model: "gpt-4o-mini",
-        temperature: 0.1,
-        max_tokens: 4000,
-        response_format: { type: "json_object" },
-        messages: [
-          { role: "system", content: systemPrompt },
-          {
-            role: "user",
-            content: `User is interested in: "${interest}"
+        const completion = await client.chat.completions.create({
+          model: "gpt-4o-mini",
+          temperature: 0.1,
+          max_tokens: 4000,
+          response_format: { type: "json_object" },
+          messages: [
+            { role: "system", content: systemPrompt },
+            {
+              role: "user",
+              content: `User is interested in: "${interest}"
 
 Analyze each page and score its relevance to this topic. Remember to use semantic understanding - match concepts, not just keywords.
 
 ${JSON.stringify(userPayload.pages, null, 2)}`,
-          },
-        ],
-      });
+            },
+          ],
+        });
 
-      const content = completion.choices[0]?.message?.content ?? null;
-      if (!content) {
-        throw new Error("No response from analysis");
-      }
+        const content = completion.choices[0]?.message?.content ?? null;
+        if (!content) {
+          throw new Error("No response from analysis");
+        }
 
-      const parsed = JSON.parse(content);
-      const rawRankings = Array.isArray(parsed.rankings) ? parsed.rankings : [];
+        const parsed = JSON.parse(content);
+        const rawRankings = Array.isArray(parsed.rankings) ? parsed.rankings : [];
 
-      return rawRankings.map((r: any, idx: number) => {
-        const page = typeof r.page === "number" ? r.page : batch[idx]?.page ?? idx + 1;
-        const numericScore = Number(r.score);
-        const safeScore = Number.isNaN(numericScore) ? 0 : Math.max(0, Math.min(100, numericScore));
+        return rawRankings.map((r: any, idx: number) => {
+          const page = typeof r.page === "number" ? r.page : batch[idx]?.page ?? idx + 1;
+          const numericScore = Number(r.score);
+          const safeScore = Number.isNaN(numericScore) ? 0 : Math.max(0, Math.min(100, numericScore));
 
-        return {
-          page,
-          score: safeScore,
-          reason: typeof r.reason === "string" ? r.reason.trim() : "",
-        };
+          return {
+            page,
+            score: safeScore,
+            reason: typeof r.reason === "string" ? r.reason.trim() : "",
+          };
+        });
       });
     };
 
     let allRankings: RelevanceResult[];
     try {
-      // Process 4 batches at a time to balance speed vs rate limits
-      const batchResults = await processWithConcurrency(batches, 4, processBatch);
+      // Process 3 batches at a time (reduced from 4) for better rate limit handling
+      const batchResults = await processWithConcurrency(batches, 3, processBatch);
       allRankings = batchResults.flat();
-    } catch (err) {
+    } catch (err: any) {
       console.error("GPT-4o-mini call failed:", err);
       return NextResponse.json(
-        { error: "Failed to analyze document. Please try again." },
+        { error: err?.message || "Failed to analyze document. Please try again." },
         { status: 500 }
       );
     }
