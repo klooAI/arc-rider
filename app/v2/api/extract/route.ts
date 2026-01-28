@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { extractText } from "unpdf";
 
 export const runtime = "nodejs";
 
@@ -7,24 +8,26 @@ export async function POST(req: NextRequest) {
     const formData = await req.formData();
     const file = formData.get("file");
 
-    if (!file || typeof file === "string") {
+    if (!(file instanceof Blob)) {
       return NextResponse.json({ error: "No PDF file uploaded." }, { status: 400 });
     }
 
-    const blob = file as Blob;
     const MAX_SIZE = 50 * 1024 * 1024;
-    if (blob.size > MAX_SIZE) {
+    if (file.size > MAX_SIZE) {
       return NextResponse.json({ error: "File too large. Maximum size is 50MB." }, { status: 400 });
     }
 
-    const arrayBuffer = await blob.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+    const arrayBuffer = await file.arrayBuffer();
+    const uint8 = new Uint8Array(arrayBuffer);
 
-    const pdfParse = await import("pdf-parse");
-    const parseFn = (pdfParse as any).default || pdfParse;
-    const data = await parseFn(buffer);
+    const { text } = await extractText(uint8, { mergePages: false });
+    const pages = text.map((p) => p.trim()).filter((p) => p.length > 0);
 
-    const fullText = data.text || "";
+    if (pages.length === 0) {
+      return NextResponse.json({ error: "No readable text found in PDF." }, { status: 400 });
+    }
+
+    const fullText = pages.join("\n\n");
     const chunks = smartChunk(fullText, 800);
 
     return NextResponse.json({ chunks });
