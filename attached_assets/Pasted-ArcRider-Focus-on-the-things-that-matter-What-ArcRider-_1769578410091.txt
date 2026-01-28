@@ -1,0 +1,317 @@
+ArcRider — Focus on the things that matter
+
+What ArcRider Is
+
+ArcRider is a document intelligence tool that helps people extract, prioritise, and understand only the most relevant parts of long documents.
+
+Instead of reading an entire book, report, or paper front-to-back, ArcRider lets users:
+
+Upload a document
+
+Define what they care about
+
+Instantly surface the pages and sections that matter most to them
+
+Summarise only those parts, not the whole document
+
+ArcRider is built for focus, not consumption.
+
+
+Who ArcRider Is For
+
+ArcRider is designed for people who regularly deal with long-form documents but don’t want to waste time:
+
+Readers working through non-fiction books
+
+Students and researchers
+
+Professionals reviewing reports, policies, or manuals
+
+Anyone revisiting a book with a specific goal in mind
+
+It’s especially useful when:
+
+You’re re-reading a document with a purpose
+
+You only care about one topic inside a large text
+
+You want clarity without skimming hundreds of pages
+
+
+Supported Inputs
+
+ArcRider currently supports:
+
+PDF
+
+DOCX
+
+EPUB
+
+Documents are uploaded via the browser and processed server-side.
+
+
+Core Concept
+
+ArcRider is built around three ideas:
+
+Extraction – Turn a document into structured, usable text
+
+Relevance – Identify which parts matter to you
+
+Summarisation – Explain only what’s relevant, clearly and concisely
+
+Everything else is intentionally ignored.
+
+
+Core Features
+
+1. Document Upload & Text Extraction
+
+User uploads a PDF, DOCX, or EPUB file.
+
+ArcRider extracts:
+
+Full plain text
+
+Individual pages (or logical chunks)
+
+The document is split into page-level units so relevance can be measured precisely.
+
+Important behaviour:
+
+The extraction step is deterministic.
+
+No summarisation or interpretation happens here.
+
+If extraction fails (e.g. file too large), the user is informed clearly.
+
+
+2. Relevance Scoring (The Core Feature)
+
+This is ArcRider’s defining feature.
+
+The user enters a topic of interest (e.g. “home ownership”, “investing psychology”, “risk management”).
+
+ArcRider evaluates every page of the document against that topic.
+
+Each page receives:
+
+A relevance score (0–100)
+
+A short explanation of why it scored that way
+
+Scores are strict and consistent:
+
+90–100 → Strong direct match
+
+70–89 → Indirect but meaningful
+
+40–69 → Weak or tangential
+
+0–39 → Not relevant
+
+The output is a ranked list of pages that matter most to the user’s goal.
+
+This allows the user to:
+
+See where in the document the topic actually lives
+
+Ignore irrelevant sections entirely
+
+Focus reading time efficiently
+
+
+2a. Contextual & Natural Language Understanding (Critical Requirement)
+
+Relevance scoring is not keyword-based.
+
+ArcRider must understand user intent expressed in natural language.
+
+This includes:
+
+Synonyms and related terms  
+Different phrasing that refers to the same concept  
+Implicit meaning rather than exact word matches  
+
+Examples:
+
+“Buying a house” should match content about:
+- mortgages
+- deposits
+- property ownership
+- first-home buyers
+- home loans
+
+“Getting promoted” should match content about:
+- career progression
+- performance reviews
+- leadership development
+- role advancement
+
+“Saving money” should match content about:
+- budgeting
+- spending habits
+- expense tracking
+- financial discipline
+
+Pages should score highly even if the user’s exact wording never appears in the text, as long as the underlying concept is present.
+
+This semantic understanding is a core requirement, not a future enhancement.
+
+
+3. Page Range Selection
+
+Once relevance is calculated:
+
+The user can:
+
+Select a single page
+
+Select a range of pages
+
+Or work from the top-ranked relevant pages
+
+Page numbers are always explicit and transparent.
+
+The user is always in control of what gets summarised.
+
+
+4. Targeted Summaries (Not Whole-Document Summaries)
+
+ArcRider does not default to summarising the entire document.
+
+Instead:
+
+Summaries are generated only for:
+
+Selected pages
+
+Selected page ranges
+
+Or the “relevant section” identified earlier
+
+This avoids:
+
+Vague, generic summaries
+
+Losing nuance in large documents
+
+Re-summarising irrelevant content
+
+Summaries are:
+
+Clear
+
+Structured
+
+Focused on the user’s stated interest
+
+
+5. Separate “Relevant Section” vs “Entire Document” Logic
+
+ArcRider explicitly distinguishes between:
+
+Entire document summaries
+
+Relevant-section summaries
+
+These are separate actions with separate UI triggers.
+
+This is intentional:
+
+Summarising everything and summarising what matters are not the same task.
+
+ArcRider prioritises the latter.
+
+
+6. Fast, Responsive UI
+
+From a user’s perspective:
+
+Upload → Extract → Relevance → Summary feels like a single flow
+
+Progress indicators are shown during long operations
+
+Errors are human-readable (e.g. file too large, unsupported format)
+
+From a technical perspective:
+
+Extraction is fast and deterministic
+
+Relevance scoring is the slowest but most important step
+
+Summarisation is lightweight once scope is reduced
+
+
+What ArcRider Is Not
+
+This is important for both developers and buyers.
+
+ArcRider is not:
+
+A generic “summarise my PDF” tool
+
+A note-taking app
+
+A reader replacement
+
+A chatbot that guesses what you want
+
+ArcRider is a decision-support reading tool.
+
+
+Design Philosophy
+
+ArcRider is intentionally opinionated:
+
+Focus beats completeness
+
+Precision beats verbosity
+
+User intent beats automation
+
+The product assumes:
+
+You already know why you’re reading — ArcRider helps you get there faster.
+
+
+Current Technical Shape (High Level)
+
+For a developer:
+
+Frontend: Next.js (App Router)
+
+Backend: Serverless API routes
+
+Document handling:
+
+Upload → extract → page chunking
+
+AI usage:
+
+Relevance scoring per page batch with semantic understanding
+
+Summarisation only after scope is reduced
+
+Architecture is intentionally simple to keep v1 reliable
+
+
+Future-Ready (But Not Required for v1)
+
+The current design intentionally leaves room for:
+
+Larger document handling via external storage
+
+Saved sessions / progress
+
+Re-visiting relevance queries
+
+Multi-topic analysis
+
+None of these are required to understand or use ArcRider today.
+
+
+One-Sentence Summary (Buyer-Friendly)
+
+ArcRider helps you stop reading entire documents and start reading only the parts that actually matter to you.

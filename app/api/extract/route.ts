@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { extractText } from "unpdf";
 
-export const runtime = "nodejs"; // ensure Node runtime
+export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
   try {
@@ -16,32 +16,45 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Blob -> Uint8Array for unpdf
+    // Check file size (max 50MB)
+    const MAX_SIZE = 50 * 1024 * 1024;
+    if (file.size > MAX_SIZE) {
+      return NextResponse.json(
+        { error: "File too large. Maximum size is 50MB." },
+        { status: 400 }
+      );
+    }
+
     const arrayBuffer = await file.arrayBuffer();
     const uint8 = new Uint8Array(arrayBuffer);
 
-    // Keep pages separate so relevance can work per page
-    // When mergePages: false, extractText returns { totalPages: number; text: string[] }
-    // The 'text' property IS the array of page texts (no separate 'pages' property)
+    // Extract text with pages separated
     const { text } = await extractText(uint8, {
       mergePages: false,
     });
 
-    // text is guaranteed to be string[] when mergePages: false
-    const pages = text.map((p) => p.trim());
+    // text is string[] when mergePages: false
+    const pages = text.map((p) => p.trim()).filter((p) => p.length > 0);
+    
+    if (pages.length === 0) {
+      return NextResponse.json(
+        { error: "No readable text found in PDF. The file may be image-based or corrupted." },
+        { status: 400 }
+      );
+    }
+
     const fullText = pages.join("\n\n").trim();
 
     return NextResponse.json({
-      text: fullText || "(No text found in PDF)",
+      text: fullText,
       pages,
     });
   } catch (err) {
     console.error("PDF extract error:", err);
 
-    const message =
-      err instanceof Error
-        ? err.message
-        : "Failed to extract text from the PDF.";
+    const message = err instanceof Error
+      ? err.message
+      : "Failed to extract text from PDF.";
 
     return NextResponse.json(
       { error: message },

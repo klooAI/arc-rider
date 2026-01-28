@@ -1,180 +1,177 @@
-// app/api/relevance/route.ts
+// app/api/extract-epub/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import OpenAI from "openai";
+import JSZip from "jszip";
 
 export const runtime = "nodejs";
 
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-type RelevanceRequest = {
-  interest: string;
-  pages: string[];   // pages or chapters
-  offset?: number;   // in case you ever slice pages server-side
-};
-
-type RelevanceResult = {
-  page: number;
-  score: number;
-  reason?: string;
-};
-
-// --- Helpers ---
-
-function compressForEmbedding(txt: string): string {
-  if (!txt) return "";
-  let cleaned = txt.replace(/\s+/g, " ").trim();
-  const MAX_CHARS = 4000;
-  if (cleaned.length > MAX_CHARS) {
-    cleaned = cleaned.slice(0, MAX_CHARS);
-  }
-  return cleaned;
+// Strip HTML tags and decode entities
+function htmlToText(html: string): string {
+  return html
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&#(\d+);/g, (_, num) => String.fromCharCode(parseInt(num, 10)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
-function cosineSimilarity(a: number[], b: number[]): number {
-  let dot = 0;
-  let normA = 0;
-  let normB = 0;
-
-  for (let i = 0; i < a.length; i++) {
-    const x = a[i];
-    const y = b[i];
-    dot += x * y;
-    normA += x * x;
-    normB += y * y;
-  }
-
-  if (normA === 0 || normB === 0) return 0;
-  return dot / (Math.sqrt(normA) * Math.sqrt(normB));
+// Extract title from HTML content
+function extractTitle(html: string): string | null {
+  const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+  if (titleMatch) return htmlToText(titleMatch[1]);
+  
+  const h1Match = html.match(/<h1[^>]*>([^<]+)<\/h1>/i);
+  if (h1Match) return htmlToText(h1Match[1]);
+  
+  const h2Match = html.match(/<h2[^>]*>([^<]+)<\/h2>/i);
+  if (h2Match) return htmlToText(h2Match[1]);
+  
+  return null;
 }
-
-// --- POST handler ---
 
 export async function POST(req: NextRequest) {
   try {
-    const body = (await req.json()) as RelevanceRequest;
+    const formData = await req.formData();
+    const file = formData.get("file");
 
-    const interest = (body.interest || "").trim();
-    const pages = Array.isArray(body.pages) ? body.pages : [];
-    const offset = typeof body.offset === "number" ? body.offset : 0;
-
-    if (!interest) {
+    if (!file || typeof file === "string") {
       return NextResponse.json(
-        { error: "Missing 'interest' in request body." },
+        { error: "No EPUB file uploaded." },
         { status: 400 }
       );
     }
 
-    if (!pages.length) {
+    const blob = file as Blob;
+    
+    // Check file size (max 50MB)
+    const MAX_SIZE = 50 * 1024 * 1024;
+    if (blob.size > MAX_SIZE) {
       return NextResponse.json(
-        { error: "Missing 'pages' array in request body." },
+        { error: "File too large. Maximum size is 50MB." },
         { status: 400 }
       );
     }
 
-    // 1) Prepare text for embeddings
-    const cleanedPages = pages.map((p) => compressForEmbedding(p || ""));
+    const arrayBuffer = await blob.arrayBuffer();
+    
+    // Load the EPUB as a ZIP file
+    const zip = await JSZip.loadAsync(arrayBuffer);
 
-    const embeddingInput = [interest, ...cleanedPages];
+    // Find and parse container.xml to get the OPF file path
+    const containerXml = await zip.file("META-INF/container.xml")?.async("string");
+    if (!containerXml) {
+      return NextResponse.json(
+        { error: "Invalid EPUB file: missing container.xml" },
+        { status: 400 }
+      );
+    }
 
-    // 2) Get embeddings for query + each page
-    const embRes = await client.embeddings.create({
-      model: "text-embedding-3-small",
-      input: embeddingInput,
-    });
+    // Extract OPF path
+    const opfMatch = containerXml.match(/full-path="([^"]+)"/);
+    if (!opfMatch) {
+      return NextResponse.json(
+        { error: "Invalid EPUB file: cannot find content path" },
+        { status: 400 }
+      );
+    }
 
-    const vectors = embRes.data.map((d) => d.embedding);
-    const queryEmbedding = vectors[0];
-    const pageEmbeddings = vectors.slice(1);
+    const opfPath = opfMatch[1];
+    const opfDir = opfPath.substring(0, opfPath.lastIndexOf("/") + 1);
+    
+    // Read and parse the OPF file
+    const opfContent = await zip.file(opfPath)?.async("string");
+    if (!opfContent) {
+      return NextResponse.json(
+        { error: "Invalid EPUB file: cannot read content file" },
+        { status: 400 }
+      );
+    }
 
-    // 3) Score each page by cosine similarity -> 0–100
-    const scored: RelevanceResult[] = pageEmbeddings.map((emb, idx) => {
-      const sim = cosineSimilarity(queryEmbedding, emb);
-      // sim is roughly [-1, 1]; turn into [0, 100]
-      const normScore = ((sim + 1) / 2) * 100;
-      const score = Math.max(0, Math.min(100, normScore));
-      return {
-        page: idx + 1 + offset,
-        score,
-      };
-    });
+    // Extract manifest items (maps id to href)
+    const manifest: Record<string, string> = {};
+    const manifestRegex = /<item[^>]+id="([^"]+)"[^>]+href="([^"]+)"[^>]*>/gi;
+    let match;
+    while ((match = manifestRegex.exec(opfContent)) !== null) {
+      manifest[match[1]] = match[2];
+    }
 
-    // 4) Decide which pages are “worth showing” at all
-    const topForReasons = scored
-      .slice()
-      .filter((r) => r.score >= 25) // rough relevance cutoff
-      .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
-      .slice(0, 24); // we only ask for reasons for the best few
+    // Also try alternate order (href before id)
+    const manifestRegex2 = /<item[^>]+href="([^"]+)"[^>]+id="([^"]+)"[^>]*>/gi;
+    while ((match = manifestRegex2.exec(opfContent)) !== null) {
+      manifest[match[2]] = match[1];
+    }
 
-    let reasonsByPage: Record<number, string> = {};
+    // Extract spine order
+    const spineItems: string[] = [];
+    const spineRegex = /<itemref[^>]+idref="([^"]+)"[^>]*>/gi;
+    while ((match = spineRegex.exec(opfContent)) !== null) {
+      spineItems.push(match[1]);
+    }
 
-    if (topForReasons.length > 0) {
-      const reasonPayload = topForReasons.map((r) => ({
-        page: r.page,
-        score: Math.round(r.score),
-        text: cleanedPages[r.page - 1 - offset] || "",
-      }));
+    if (spineItems.length === 0) {
+      return NextResponse.json(
+        { error: "Invalid EPUB file: no readable content found" },
+        { status: 400 }
+      );
+    }
 
-      const completion = await client.chat.completions.create({
-        model: "gpt-4.1-mini",
-        response_format: { type: "json_object" },
-        messages: [
-          {
-            role: "system",
-            content: `
-You write very short, clear reasons why a given page from a document
-is relevant to a user's question. One sentence per page. No fluff.
-Return JSON like:
-{ "reasons": [ { "page": number, "reason": string }, ... ] }.
-          `.trim(),
-          },
-          {
-            role: "user",
-            content: `
-User question:
-${interest}
+    const chapters: string[] = [];
+    const chapterTitles: string[] = [];
 
-Here are some candidate pages with their scores and text.
-For each, write ONE short sentence explaining why this page would help answer the user's question.
+    // Read each spine item in order
+    for (const itemId of spineItems) {
+      const href = manifest[itemId];
+      if (!href) continue;
 
-${JSON.stringify(reasonPayload, null, 2)}
-          `.trim(),
-          },
-        ],
-      });
-
-      const raw = completion.choices?.[0]?.message?.content ?? "{}";
+      // Handle relative paths
+      const fullPath = href.startsWith("/") ? href.slice(1) : opfDir + href;
+      
       try {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed.reasons)) {
-          for (const r of parsed.reasons) {
-            const p = Number(r.page);
-            if (!Number.isNaN(p) && typeof r.reason === "string") {
-              reasonsByPage[p] = r.reason.trim();
-            }
-          }
+        const content = await zip.file(fullPath)?.async("string");
+        if (!content) continue;
+
+        const plainText = htmlToText(content);
+        
+        // Only include chapters with substantial content
+        if (plainText.length > 100) {
+          chapters.push(plainText);
+          
+          const title = extractTitle(content) || `Chapter ${chapters.length}`;
+          chapterTitles.push(title);
         }
       } catch (err) {
-        console.error("Failed to parse reasons JSON:", err, raw);
+        console.warn(`Failed to read ${fullPath}:`, err);
       }
     }
 
-    // 5) Final rankings: keep only reasonably relevant pages
-    const rankings: RelevanceResult[] = scored
-      .filter((r) => r.score >= 25) // this matches your frontend filter
-      .map((r) => ({
-        page: r.page,
-        score: r.score,
-        reason: reasonsByPage[r.page],
-      }))
-      .sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
+    if (chapters.length === 0) {
+      return NextResponse.json(
+        { error: "No readable content found in EPUB file." },
+        { status: 400 }
+      );
+    }
 
-    return NextResponse.json({ rankings });
-  } catch (err: any) {
-    console.error("Error in /api/relevance:", err);
+    const fullText = chapters.join("\n\n");
+
+    return NextResponse.json({
+      text: fullText,
+      pages: chapters,
+      chapters: chapterTitles,
+    });
+  } catch (err) {
+    console.error("EPUB extract error:", err);
+    
+    const message = err instanceof Error ? err.message : "Failed to extract EPUB file.";
+    
     return NextResponse.json(
-      { error: err?.message || "Failed relevance scan." },
+      { error: message },
       { status: 500 }
     );
   }
