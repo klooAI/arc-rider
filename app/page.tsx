@@ -44,12 +44,13 @@ export default function HomePage() {
           </div>
           
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
-            Find what matters{" "}
-            <br className="sm:hidden" />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-400">
-              in any{" "}
+            <span className="block sm:inline">Find what matters</span>{" "}
+            <span className="block sm:inline whitespace-nowrap">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-400">
+                in any
+              </span>{" "}
               <span
-                className={`inline-block min-w-[180px] sm:min-w-[280px] text-left transition-all duration-200 ${
+                className={`inline-block min-w-[140px] sm:min-w-[200px] text-left text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-400 transition-all duration-200 ${
                   isAnimating ? "opacity-0 translate-y-2" : "opacity-100 translate-y-0"
                 }`}
               >
