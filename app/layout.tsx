@@ -18,14 +18,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter.className} bg-[#F9FAFB] text-[#1F2937] min-h-screen`}
+        className={`${inter.className} bg-slate-900 text-white min-h-screen`}
       >
         <div className="min-h-screen flex flex-col">
           {/* Top navigation */}
-          <header className="w-full border-b border-[#1D4ED8]/10 bg-[#2563EB] text-white shadow-sm">
+          <header className="w-full border-b border-slate-700/50 bg-slate-900/80 backdrop-blur-md text-white sticky top-0 z-50">
             <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
-              <a href="/" className="flex items-center gap-2 hover:opacity-90 transition">
-                <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center text-[11px] font-semibold text-[#2563EB]">
+              <a href="/" className="flex items-center gap-2.5 hover:opacity-90 transition group">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-xs font-bold text-white shadow-lg shadow-violet-500/20">
                   AR
                 </div>
                 <span className="text-sm sm:text-base font-semibold tracking-tight">
@@ -34,11 +34,11 @@ export default function RootLayout({
               </a>
 
               {/* Right side navigation */}
-              <div className="hidden sm:flex items-center gap-4 text-xs text-blue-100/90">
-                <a href="/about" className="border-b border-transparent hover:border-[#059669] hover:text-white transition-colors">
+              <div className="hidden sm:flex items-center gap-6 text-sm text-slate-400">
+                <a href="/about" className="hover:text-white transition-colors">
                   About
                 </a>
-                <a href="/how-it-works" className="border-b border-transparent hover:border-[#059669] hover:text-white transition-colors">
+                <a href="/how-it-works" className="hover:text-white transition-colors">
                   How it works
                 </a>
               </div>
@@ -49,8 +49,8 @@ export default function RootLayout({
           <main className="flex-1">{children}</main>
 
           {/* Footer */}
-          <footer className="border-t border-[#E5E7EB] bg-white">
-            <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between text-[11px] text-[#6B7280]">
+          <footer className="border-t border-slate-800 bg-slate-900">
+            <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between text-xs text-slate-500">
               <span>© {new Date().getFullYear()} ArcRider</span>
               <span className="hidden sm:inline">
                 Focus your reading. Let AI surface what matters.
