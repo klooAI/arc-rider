@@ -349,7 +349,7 @@ export default function V2Page() {
                   </svg>
                   Indexed & Ready
                 </div>
-                <p className="font-semibold text-white text-lg">{document.fileName}</p>
+                <p className="font-semibold text-white text-lg break-all line-clamp-2 max-w-full">{document.fileName}</p>
                 <p className="text-sm text-slate-400 mt-1">
                   {document.totalPages} pages • {document.chunks.length} searchable sections
                 </p>
@@ -431,7 +431,7 @@ export default function V2Page() {
               <label className="block text-lg font-semibold text-white mb-4">
                 What are you looking for?
               </label>
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <input
                   type="text"
                   value={query}
@@ -444,11 +444,11 @@ export default function V2Page() {
                 <button
                   onClick={handleSearch}
                   disabled={searching || !query.trim()}
-                  className="px-6 py-3.5 font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl hover:from-emerald-400 hover:to-teal-400 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-lg shadow-emerald-500/25"
+                  className="px-6 py-3.5 font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl hover:from-emerald-400 hover:to-teal-400 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-lg shadow-emerald-500/25 whitespace-nowrap"
                   data-testid="button-search"
                 >
                   {searching ? (
-                    <span className="flex items-center gap-2">
+                    <span className="flex items-center justify-center gap-2">
                       <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
@@ -456,7 +456,7 @@ export default function V2Page() {
                       Analyzing...
                     </span>
                   ) : (
-                    "Find relevant sections"
+                    "Search"
                   )}
                 </button>
               </div>
@@ -464,19 +464,19 @@ export default function V2Page() {
 
             {results.length > 0 && (
               <div className="bg-slate-800/50 backdrop-blur rounded-2xl border border-slate-700 overflow-hidden">
-                <div className="flex items-center justify-between p-5 border-b border-slate-700">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 sm:p-5 border-b border-slate-700">
                   <button
                     onClick={() => setShowResults(!showResults)}
                     className="flex items-center gap-3 text-left"
                   >
-                    <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 font-bold text-sm">
+                    <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 font-bold text-sm flex-shrink-0">
                       {results.length}
                     </span>
-                    <span className="text-white font-semibold">
+                    <span className="text-white font-semibold text-sm sm:text-base">
                       Relevant sections found
                     </span>
                     <svg
-                      className={`w-5 h-5 text-slate-400 transition-transform ${showResults ? "rotate-180" : ""}`}
+                      className={`w-5 h-5 text-slate-400 transition-transform flex-shrink-0 ${showResults ? "rotate-180" : ""}`}
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -487,10 +487,10 @@ export default function V2Page() {
                   <button
                     onClick={handleSummarize}
                     disabled={summarizing}
-                    className="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-lg hover:from-violet-400 hover:to-fuchsia-400 disabled:opacity-50 transition"
+                    className="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-lg hover:from-violet-400 hover:to-fuchsia-400 disabled:opacity-50 transition whitespace-nowrap self-start sm:self-auto"
                     data-testid="button-summarize"
                   >
-                    {summarizing ? "Summarizing..." : "Summarize these"}
+                    {summarizing ? "Summarizing..." : "Summarize"}
                   </button>
                 </div>
 
