@@ -24,7 +24,7 @@ export default function RootLayout({
           {/* Top navigation */}
           <header className="w-full border-b border-slate-700/50 bg-slate-900/80 backdrop-blur-md text-white sticky top-0 z-50">
             <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
-              <a href="/" className="flex items-center gap-2.5 hover:opacity-90 transition group">
+              <a href="/tool" className="flex items-center gap-2.5 hover:opacity-90 transition group">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-xs font-bold text-white shadow-lg shadow-violet-500/20">
                   AR
                 </div>
