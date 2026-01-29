@@ -633,75 +633,74 @@ export default function V2Page() {
                 </h2>
               </div>
 
-              <div className="flex flex-wrap items-center gap-6 mb-5">
-                <label className="flex items-center gap-2.5 cursor-pointer group">
-                  <input
-                    type="radio"
-                    name="directMode"
-                    checked={directSummaryMode === "full"}
-                    onChange={() => setDirectSummaryMode("full")}
-                    className="w-4 h-4 text-violet-500 bg-slate-700 border-slate-600 focus:ring-violet-500 focus:ring-offset-slate-800 accent-violet-500"
-                  />
-                  <span className="text-slate-300 group-hover:text-white transition">Entire document</span>
-                </label>
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div className="flex flex-wrap items-center gap-6">
+                  <label className="flex items-center gap-2.5 cursor-pointer group">
+                    <input
+                      type="radio"
+                      name="directMode"
+                      checked={directSummaryMode === "full"}
+                      onChange={() => setDirectSummaryMode("full")}
+                      className="w-4 h-4 text-violet-500 bg-slate-700 border-slate-600 focus:ring-violet-500 focus:ring-offset-slate-800 accent-violet-500"
+                    />
+                    <span className="text-slate-300 group-hover:text-white transition">Entire document</span>
+                  </label>
 
-                <label className="flex items-center gap-2.5 cursor-pointer group">
-                  <input
-                    type="radio"
-                    name="directMode"
-                    checked={directSummaryMode === "range"}
-                    onChange={() => setDirectSummaryMode("range")}
-                    className="w-4 h-4 text-violet-500 bg-slate-700 border-slate-600 focus:ring-violet-500 focus:ring-offset-slate-800 accent-violet-500"
-                  />
-                  <span className="text-slate-300 group-hover:text-white transition">Page range</span>
-                </label>
-              </div>
+                  <label className="flex items-center gap-2.5 cursor-pointer group">
+                    <input
+                      type="radio"
+                      name="directMode"
+                      checked={directSummaryMode === "range"}
+                      onChange={() => setDirectSummaryMode("range")}
+                      className="w-4 h-4 text-violet-500 bg-slate-700 border-slate-600 focus:ring-violet-500 focus:ring-offset-slate-800 accent-violet-500"
+                    />
+                    <span className="text-slate-300 group-hover:text-white transition">Page range</span>
+                  </label>
 
-              {directSummaryMode === "range" && (
-                <div className="flex items-center gap-3 mb-5">
-                  <input
-                    type="number"
-                    min="1"
-                    max={document?.totalPages || 999}
-                    value={pageStart}
-                    onChange={(e) => setPageStart(e.target.value)}
-                    placeholder="From"
-                    className="w-24 px-3 py-2.5 bg-slate-900/50 border border-slate-600 rounded-lg text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent"
-                  />
-                  <span className="text-slate-500">to</span>
-                  <input
-                    type="number"
-                    min="1"
-                    max={document?.totalPages || 999}
-                    value={pageEnd}
-                    onChange={(e) => setPageEnd(e.target.value)}
-                    placeholder="To"
-                    className="w-24 px-3 py-2.5 bg-slate-900/50 border border-slate-600 rounded-lg text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent"
-                  />
-                  <span className="text-sm text-slate-500">
-                    (of {document?.totalPages || 0} pages)
-                  </span>
+                  {directSummaryMode === "range" && (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        min="1"
+                        max={document?.totalPages || 999}
+                        value={pageStart}
+                        onChange={(e) => setPageStart(e.target.value)}
+                        placeholder="From"
+                        className="w-20 px-3 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent"
+                      />
+                      <span className="text-slate-500 text-sm">to</span>
+                      <input
+                        type="number"
+                        min="1"
+                        max={document?.totalPages || 999}
+                        value={pageEnd}
+                        onChange={(e) => setPageEnd(e.target.value)}
+                        placeholder="To"
+                        className="w-20 px-3 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent"
+                      />
+                    </div>
+                  )}
                 </div>
-              )}
 
-              <button
-                onClick={handleDirectSummary}
-                disabled={directSummarizing || summarizing}
-                className="px-6 py-3 font-semibold text-white bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-xl hover:from-violet-500 hover:to-fuchsia-500 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-lg shadow-violet-500/20"
-                data-testid="button-direct-summary"
-              >
-                {directSummarizing ? (
-                  <span className="flex items-center gap-2">
-                    <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                    </svg>
-                    Generating...
-                  </span>
-                ) : (
-                  "Generate summary"
-                )}
-              </button>
+                <button
+                  onClick={handleDirectSummary}
+                  disabled={directSummarizing || summarizing}
+                  className="px-5 py-2.5 font-semibold text-white bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-xl hover:from-violet-500 hover:to-fuchsia-500 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-lg shadow-violet-500/20"
+                  data-testid="button-direct-summary"
+                >
+                  {directSummarizing ? (
+                    <span className="flex items-center gap-2">
+                      <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      Generating...
+                    </span>
+                  ) : (
+                    "Generate summary"
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         )}
