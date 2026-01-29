@@ -25,7 +25,7 @@ export default function HomePage() {
           </h1>
           
           <p className="text-xl text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
-            Upload any book and instantly find the parts that actually matter to you. 
+            Upload any document and instantly find the parts that actually matter to you. 
             Skip the fluff, dive into what sparks your curiosity.
           </p>
           
