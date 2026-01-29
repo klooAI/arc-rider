@@ -112,7 +112,7 @@ export async function POST(req: NextRequest) {
       messages: [
         {
           role: "system",
-          content: "Summarize what topics this expanded search covers in a single natural phrase. Start with 'pages about' or 'sections covering'. Be comprehensive but concise (8-12 words). Example: 'pages about intimacy, sexual encounters, desire, and physical relationships'.",
+          content: "List the key topics this expanded search covers as a comma-separated phrase. Do NOT start with 'pages about' or 'sections'. Just list 3-5 topics. Example: 'intimacy, sexual encounters, desire, and physical relationships'. Another example: 'managing debt, financial obligations, emotional impact, and personal responsibility'.",
         },
         {
           role: "user",
