@@ -112,7 +112,7 @@ export async function POST(req: NextRequest) {
       messages: [
         {
           role: "system",
-          content: "List the key topics this expanded search covers as a comma-separated phrase. Do NOT start with 'pages about' or 'sections'. Just list 3-5 topics. Example: 'intimacy, sexual encounters, desire, and physical relationships'. Another example: 'managing debt, financial obligations, emotional impact, and personal responsibility'.",
+          content: "Extract 3-5 key topics from this text as a simple comma-separated list. Output ONLY the topics, no prefix words. Examples: 'intimacy, desire, and physical relationships' or 'debt management, financial stress, and personal responsibility'.",
         },
         {
           role: "user",
