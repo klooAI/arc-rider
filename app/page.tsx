@@ -456,7 +456,7 @@ export default function V2Page() {
                       Analyzing...
                     </span>
                   ) : (
-                    "Search"
+                    "Find relevant sections"
                   )}
                 </button>
               </div>
@@ -490,7 +490,7 @@ export default function V2Page() {
                     className="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-lg hover:from-violet-400 hover:to-fuchsia-400 disabled:opacity-50 transition whitespace-nowrap self-start sm:self-auto"
                     data-testid="button-summarize"
                   >
-                    {summarizing ? "Summarizing..." : "Summarize"}
+                    {summarizing ? "Summarizing..." : "Summarize these"}
                   </button>
                 </div>
 
