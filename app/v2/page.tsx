@@ -532,10 +532,15 @@ export default function V2Page() {
                           <ul className="space-y-3">
                             {tldrLines.map((line, i) => {
                               const text = line.replace(/^[-•]\s*/, "").replace(/^\d+\.\s*/, "").trim();
+                              const parts = text.split(/\*\*(.+?)\*\*/g);
                               return (
                                 <li key={i} className="flex items-start gap-3">
                                   <span className="mt-2 w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0" />
-                                  <span className="text-slate-200 leading-relaxed">{text}</span>
+                                  <span className="text-slate-200 leading-relaxed">
+                                    {parts.map((part, j) => 
+                                      j % 2 === 1 ? <strong key={j} className="text-white font-semibold">{part}</strong> : part
+                                    )}
+                                  </span>
                                 </li>
                               );
                             })}
@@ -557,18 +562,22 @@ export default function V2Page() {
                             {summaryLines.map((line, i) => {
                               const isBullet = line.trim().startsWith("-") || line.trim().startsWith("•") || line.trim().match(/^\d+\./);
                               const text = line.replace(/^[-•]\s*/, "").replace(/^\d+\.\s*/, "").trim();
+                              const parts = text.split(/\*\*(.+?)\*\*/g);
+                              const renderText = parts.map((part, j) => 
+                                j % 2 === 1 ? <strong key={j} className="text-white font-semibold">{part}</strong> : part
+                              );
                               
                               if (isBullet) {
                                 return (
                                   <div key={i} className="flex items-start gap-3 pl-2">
                                     <span className="mt-2 w-1.5 h-1.5 rounded-full bg-violet-400 flex-shrink-0" />
-                                    <span className="text-slate-300 leading-relaxed">{text}</span>
+                                    <span className="text-slate-300 leading-relaxed">{renderText}</span>
                                   </div>
                                 );
                               }
                               return (
                                 <p key={i} className="text-slate-300 leading-relaxed">
-                                  {line}
+                                  {renderText}
                                 </p>
                               );
                             })}
@@ -585,9 +594,16 @@ export default function V2Page() {
                             Summary
                           </h3>
                           <div className="space-y-3">
-                            {lines.map((line, i) => (
-                              <p key={i} className="text-slate-300 leading-relaxed">{line}</p>
-                            ))}
+                            {lines.map((line, i) => {
+                              const parts = line.split(/\*\*(.+?)\*\*/g);
+                              return (
+                                <p key={i} className="text-slate-300 leading-relaxed">
+                                  {parts.map((part, j) => 
+                                    j % 2 === 1 ? <strong key={j} className="text-white font-semibold">{part}</strong> : part
+                                  )}
+                                </p>
+                              );
+                            })}
                           </div>
                         </div>
                       )}
