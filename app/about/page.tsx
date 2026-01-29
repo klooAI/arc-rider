@@ -76,7 +76,7 @@ export default function AboutPage() {
               Semantic Search, Not Keyword Matching
             </h2>
             <p className="text-slate-400 max-w-2xl mx-auto">
-              ArcRider understands meaning. Search for "how to save money" and find sections about budgeting, frugality, and financial planning—even if those exact words aren't used.
+              ArcRider understands meaning. Search for "how to save money" and find sections about budgeting, frugality, and financial planning, even if those exact words aren't used.
             </p>
           </div>
 

@@ -9,7 +9,7 @@ export default function HowItWorksPage() {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            Simple 3-Step Process
+            Simple 4-Step Process
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-6 leading-tight">
             From Document to Insight<br />
@@ -38,7 +38,7 @@ export default function HowItWorksPage() {
                   Upload Your Document
                 </h3>
                 <p className="text-slate-400 leading-relaxed mb-4">
-                  Drag and drop any PDF, Word document, or ebook. We support files up to 200MB—that's most books and documents you'll ever need.
+                  Drag and drop any PDF, Word document, or ebook. We support files up to 200MB, which covers most books and documents you'll ever need.
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <span className="px-3 py-1 rounded-full bg-slate-700/50 text-slate-300 text-sm">PDF</span>
@@ -62,7 +62,7 @@ export default function HowItWorksPage() {
                   Describe What You Need
                 </h3>
                 <p className="text-slate-400 leading-relaxed mb-4">
-                  Type what you're looking for in plain language. Our AI understands context and meaning—not just keywords.
+                  Type what you're looking for in plain language. Our AI understands context and meaning, not just keywords.
                 </p>
                 <div className="bg-slate-900/50 rounded-xl p-4 border border-slate-700/50">
                   <p className="text-slate-500 text-sm mb-2">Example searches:</p>
@@ -99,6 +99,35 @@ export default function HowItWorksPage() {
                   <div className="bg-slate-900/50 rounded-xl p-4 border border-slate-700/50">
                     <div className="text-emerald-400 font-medium mb-1">Relevance Scores</div>
                     <p className="text-slate-500 text-sm">Most important first</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="relative flex gap-8">
+              <div className="hidden md:flex flex-col items-center">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center shadow-lg shadow-violet-500/30">
+                  <span className="text-2xl font-bold text-white">4</span>
+                </div>
+              </div>
+              <div className="flex-1 bg-slate-800/40 backdrop-blur rounded-2xl border border-slate-700/50 p-8">
+                <div className="md:hidden w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center mb-4">
+                  <span className="text-lg font-bold text-white">4</span>
+                </div>
+                <h3 className="text-xl font-semibold text-white mb-3">
+                  Get AI Summaries
+                </h3>
+                <p className="text-slate-400 leading-relaxed mb-4">
+                  Want the key points without reading? Generate focused summaries tailored to your specific interest. Get a quick TL;DR plus a detailed breakdown of the most important insights.
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-slate-900/50 rounded-xl p-4 border border-slate-700/50">
+                    <div className="text-emerald-400 font-medium mb-1">TL;DR</div>
+                    <p className="text-slate-500 text-sm">Quick bullet points</p>
+                  </div>
+                  <div className="bg-slate-900/50 rounded-xl p-4 border border-slate-700/50">
+                    <div className="text-emerald-400 font-medium mb-1">Detailed Summary</div>
+                    <p className="text-slate-500 text-sm">In-depth analysis</p>
                   </div>
                 </div>
               </div>
@@ -146,7 +175,7 @@ export default function HowItWorksPage() {
               <div>
                 <h4 className="font-medium text-white mb-1">Focused Summaries</h4>
                 <p className="text-slate-400 text-sm leading-relaxed">
-                  AI summaries tailored to your specific question—not generic overviews of the entire document.
+                  AI summaries tailored to your specific question, not generic overviews of the entire document.
                 </p>
               </div>
             </div>
