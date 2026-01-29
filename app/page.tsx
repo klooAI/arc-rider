@@ -8,7 +8,8 @@ const rotatingWords = [
   "document",
   "report",
   "manual",
-  "paper",
+  "research paper",
+  "case study",
   "thesis",
 ];
 
