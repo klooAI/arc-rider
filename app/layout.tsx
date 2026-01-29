@@ -34,7 +34,7 @@ export default function RootLayout({
               </a>
 
               {/* Right side navigation */}
-              <div className="hidden sm:flex items-center gap-6 text-sm text-slate-400">
+              <div className="flex items-center gap-3 sm:gap-6 text-xs sm:text-sm text-slate-400">
                 <a href="/about" className="hover:text-white transition-colors">
                   About
                 </a>
