@@ -621,10 +621,17 @@ export default function V2Page() {
               </div>
             )}
 
-            <div className="bg-slate-800/50 backdrop-blur rounded-2xl border border-slate-700 p-6">
-              <h2 className="text-lg font-semibold text-white mb-4">
-                Or summarize directly
-              </h2>
+            <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur rounded-2xl border border-slate-700/50 p-6">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 flex items-center justify-center border border-violet-500/30">
+                  <svg className="w-5 h-5 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <h2 className="text-lg font-semibold text-white">
+                  Or summarize directly
+                </h2>
+              </div>
 
               <div className="flex flex-wrap items-center gap-6 mb-5">
                 <label className="flex items-center gap-2.5 cursor-pointer group">
@@ -633,7 +640,7 @@ export default function V2Page() {
                     name="directMode"
                     checked={directSummaryMode === "full"}
                     onChange={() => setDirectSummaryMode("full")}
-                    className="w-4 h-4 text-violet-500 bg-slate-700 border-slate-600 focus:ring-violet-500 focus:ring-offset-slate-800"
+                    className="w-4 h-4 text-violet-500 bg-slate-700 border-slate-600 focus:ring-violet-500 focus:ring-offset-slate-800 accent-violet-500"
                   />
                   <span className="text-slate-300 group-hover:text-white transition">Entire document</span>
                 </label>
@@ -644,7 +651,7 @@ export default function V2Page() {
                     name="directMode"
                     checked={directSummaryMode === "range"}
                     onChange={() => setDirectSummaryMode("range")}
-                    className="w-4 h-4 text-violet-500 bg-slate-700 border-slate-600 focus:ring-violet-500 focus:ring-offset-slate-800"
+                    className="w-4 h-4 text-violet-500 bg-slate-700 border-slate-600 focus:ring-violet-500 focus:ring-offset-slate-800 accent-violet-500"
                   />
                   <span className="text-slate-300 group-hover:text-white transition">Page range</span>
                 </label>
@@ -680,7 +687,7 @@ export default function V2Page() {
               <button
                 onClick={handleDirectSummary}
                 disabled={directSummarizing || summarizing}
-                className="px-6 py-3 font-semibold text-white bg-slate-700 border border-slate-600 rounded-xl hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                className="px-6 py-3 font-semibold text-white bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-xl hover:from-violet-500 hover:to-fuchsia-500 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-lg shadow-violet-500/20"
                 data-testid="button-direct-summary"
               >
                 {directSummarizing ? (
