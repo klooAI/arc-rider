@@ -374,7 +374,7 @@ export default function V2Page() {
                       className="px-5 py-2.5 font-medium text-white bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-xl hover:from-violet-500 hover:to-fuchsia-500 disabled:opacity-50 transition shadow-lg shadow-violet-500/25"
                       data-testid="button-process"
                     >
-                      {extracting ? "Extracting..." : embedding ? "Indexing..." : "Index Document"}
+                      {extracting ? "Reading document..." : embedding ? "Preparing..." : "Upload Document"}
                     </button>
                   )}
                 </div>
