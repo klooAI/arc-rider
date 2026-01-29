@@ -24,14 +24,14 @@ export default function RootLayout({
           {/* Top navigation */}
           <header className="w-full border-b border-[#1D4ED8]/10 bg-[#2563EB] text-white shadow-sm">
             <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
-              <div className="flex items-center gap-2">
+              <a href="/" className="flex items-center gap-2 hover:opacity-90 transition">
                 <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center text-[11px] font-semibold text-[#2563EB]">
                   AR
                 </div>
                 <span className="text-sm sm:text-base font-semibold tracking-tight">
                   ArcRider
                 </span>
-              </div>
+              </a>
 
               {/* Right side navigation */}
               <div className="hidden sm:flex items-center gap-4 text-xs text-blue-100/90">
