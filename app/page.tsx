@@ -47,7 +47,7 @@ export default function V2Page() {
   
   const [suggestedTopics, setSuggestedTopics] = useState("");
 
-  const MAX_FILE_SIZE = 50 * 1024 * 1024;
+  const MAX_FILE_SIZE = 200 * 1024 * 1024;
 
   const validateFile = useCallback((f: File): string | null => {
     const name = f.name.toLowerCase();
@@ -363,10 +363,10 @@ export default function V2Page() {
                 </div>
                 <div className="text-center">
                   <p className="font-medium text-white mb-1">
-                    {file ? file.name : "Drop your document here"}
+                    {file ? file.name : "Upload a book to find what interests you"}
                   </p>
                   <p className="text-sm text-slate-500">
-                    {file ? `${(file.size / 1024 / 1024).toFixed(1)} MB` : "PDF, DOCX, or EPUB • Max 50MB"}
+                    {file ? `${(file.size / 1024 / 1024).toFixed(1)} MB` : "PDF, DOCX, or EPUB • Max 200MB"}
                   </p>
                 </div>
 
