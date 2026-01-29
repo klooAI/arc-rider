@@ -16,11 +16,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check file size (max 50MB)
-    const MAX_SIZE = 50 * 1024 * 1024;
+    // Check file size (max 200MB)
+    const MAX_SIZE = 200 * 1024 * 1024;
     if (file.size > MAX_SIZE) {
       return NextResponse.json(
-        { error: "File too large. Maximum size is 50MB." },
+        { error: "File too large. Maximum size is 200MB." },
         { status: 400 }
       );
     }

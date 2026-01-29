@@ -45,7 +45,8 @@ export default function V2Page() {
   const [pageEnd, setPageEnd] = useState("");
   const [directSummarizing, setDirectSummarizing] = useState(false);
 
-  const MAX_FILE_SIZE = 50 * 1024 * 1024;
+  const MAX_FILE_SIZE = 200 * 1024 * 1024;
+  const [warning, setWarning] = useState<string | null>(null);
 
   const validateFile = useCallback((f: File): string | null => {
     const name = f.name.toLowerCase();
@@ -53,7 +54,7 @@ export default function V2Page() {
       return "Please upload a PDF, DOCX, or EPUB file.";
     }
     if (f.size > MAX_FILE_SIZE) {
-      return "File too large. Maximum size is 50MB.";
+      return "File too large. Maximum size is 200MB.";
     }
     return null;
   }, []);
@@ -68,6 +69,7 @@ export default function V2Page() {
       }
       setFile(f);
       setError(null);
+      setWarning(null);
       setDocument(null);
       setResults([]);
       setSummary("");
@@ -101,6 +103,7 @@ export default function V2Page() {
     setExtracting(true);
     setEmbedding(false);
     setError(null);
+    setWarning(null);
     setDocument(null);
     setResults([]);
     setSummary("");
@@ -127,6 +130,17 @@ export default function V2Page() {
       const docType = name.endsWith(".pdf") ? "pdf" : name.endsWith(".docx") ? "docx" : "epub";
 
       if (!chunks.length) throw new Error("No content found in document");
+
+      // Soft warnings
+      if (totalPages > 500) {
+        setWarning(`This document has ${totalPages} pages. Processing may take a moment.`);
+      } else if (docType === "pdf" && chunks.length > 0) {
+        // Check for scanned PDF - low text density indicates images
+        const avgCharsPerPage = chunks.reduce((sum, c) => sum + c.length, 0) / totalPages;
+        if (avgCharsPerPage < 200 && totalPages > 5) {
+          setWarning("This PDF appears to be scanned or image-heavy. Processing may take longer.");
+        }
+      }
 
       setProgress({ step: "Building semantic index...", percent: 50 });
       setExtracting(false);
@@ -348,7 +362,7 @@ export default function V2Page() {
                     {file ? file.name : "Drop your document here"}
                   </p>
                   <p className="text-sm text-slate-500">
-                    {file ? `${(file.size / 1024 / 1024).toFixed(1)} MB` : "PDF, DOCX, or EPUB • Max 50MB"}
+                    {file ? `${(file.size / 1024 / 1024).toFixed(1)} MB` : "PDF, DOCX, or EPUB • Max 200MB"}
                   </p>
                 </div>
 
@@ -402,6 +416,17 @@ export default function V2Page() {
             {error && (
               <div className="w-full max-w-sm p-4 bg-red-500/10 border border-red-500/30 rounded-xl" data-testid="error-message">
                 <p className="text-sm text-red-400">{error}</p>
+              </div>
+            )}
+
+            {warning && !error && (
+              <div className="w-full max-w-sm p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl" data-testid="warning-message">
+                <p className="text-sm text-amber-400 flex items-center gap-2">
+                  <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  {warning}
+                </p>
               </div>
             )}
           </div>

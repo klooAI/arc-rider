@@ -38,7 +38,7 @@ export default function HowItWorksPage() {
                   Upload Your Document
                 </h3>
                 <p className="text-slate-400 leading-relaxed mb-4">
-                  Drag and drop any PDF, Word document, or ebook. We support files up to 50MB—that's a 500+ page book with room to spare.
+                  Drag and drop any PDF, Word document, or ebook. We support files up to 200MB—that's most books and documents you'll ever need.
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <span className="px-3 py-1 rounded-full bg-slate-700/50 text-slate-300 text-sm">PDF</span>

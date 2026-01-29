@@ -35,9 +35,9 @@ export async function POST(req: NextRequest) {
     }
 
     const blob = file as Blob;
-    const MAX_SIZE = 50 * 1024 * 1024;
+    const MAX_SIZE = 200 * 1024 * 1024;
     if (blob.size > MAX_SIZE) {
-      return NextResponse.json({ error: "File too large. Maximum size is 50MB." }, { status: 400 });
+      return NextResponse.json({ error: "File too large. Maximum size is 200MB." }, { status: 400 });
     }
 
     const arrayBuffer = await blob.arrayBuffer();
