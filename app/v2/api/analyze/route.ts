@@ -85,24 +85,43 @@ export async function POST(req: NextRequest) {
 
     // Expand the query with related concepts for better semantic matching
     const isShortQuery = query.trim().split(/\s+/).length <= 2;
-    const expansionRes = await client.chat.completions.create({
-      model: "gpt-4o-mini",
-      temperature: 0.4,
-      max_tokens: 150,
-      messages: [
-        {
-          role: "system",
-          content: isShortQuery
-            ? "The user is searching for a topic in a book. Expand this short query into a comprehensive description (80-120 words) that captures ALL related concepts, themes, situations, emotions, and scenarios. Include explicit and implicit meanings, related activities, consequences, and contextual uses. Be thorough."
-            : "Expand the user's search query into a rich description that includes synonyms and related concepts. Output a single paragraph (50-80 words) that captures the full semantic meaning. Do not use bullet points.",
-        },
-        {
-          role: "user",
-          content: query,
-        },
-      ],
-    });
+    // Generate both the expansion for search and a brief interpretation for the user
+    const [expansionRes, interpretationRes] = await Promise.all([
+      client.chat.completions.create({
+        model: "gpt-4o-mini",
+        temperature: 0.4,
+        max_tokens: 150,
+        messages: [
+          {
+            role: "system",
+            content: isShortQuery
+              ? "The user is searching for a topic in a book. Expand this short query into a comprehensive description (80-120 words) that captures ALL related concepts, themes, situations, emotions, and scenarios. Include explicit and implicit meanings, related activities, consequences, and contextual uses. Be thorough."
+              : "Expand the user's search query into a rich description that includes synonyms and related concepts. Output a single paragraph (50-80 words) that captures the full semantic meaning. Do not use bullet points.",
+          },
+          {
+            role: "user",
+            content: query,
+          },
+        ],
+      }),
+      client.chat.completions.create({
+        model: "gpt-4o-mini",
+        temperature: 0.3,
+        max_tokens: 30,
+        messages: [
+          {
+            role: "system",
+            content: "Rephrase the user's search query into a brief, natural phrase that shows you understand what they're looking for. Start with a lowercase word. Max 8 words. Examples: 'sections about building trust in relationships', 'passages discussing fear of failure', 'content on practical networking advice'. Do not use quotes.",
+          },
+          {
+            role: "user",
+            content: query,
+          },
+        ],
+      }),
+    ]);
     const expandedQuery = expansionRes.choices[0]?.message?.content || query;
+    const queryInterpretation = interpretationRes.choices[0]?.message?.content?.trim() || query;
 
     const queryRes = await client.embeddings.create({
       model: "text-embedding-3-small",
@@ -175,7 +194,8 @@ export async function POST(req: NextRequest) {
       groups: enrichedGroups,
       totalMatches: relevant.length,
       docType: docType || "pdf",
-      lowerConfidence: showingLowerConfidence
+      lowerConfidence: showingLowerConfidence,
+      interpretation: queryInterpretation
     });
   } catch (err: any) {
     console.error("Analyze error:", err);
