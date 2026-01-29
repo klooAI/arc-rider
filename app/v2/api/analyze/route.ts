@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
       score: cosineSimilarity(queryEmbedding, embeddings[idx]),
     }));
 
-    const relevant = scored.filter((r) => r.score > 0.35);
+    const relevant = scored.filter((r) => r.score > 0.25);
     
     if (relevant.length === 0) {
       return NextResponse.json({ groups: [] });
