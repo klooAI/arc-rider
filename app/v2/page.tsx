@@ -503,20 +503,97 @@ export default function V2Page() {
             )}
 
             {summary && (
-              <div className="bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10 rounded-2xl border border-violet-500/30 p-6">
-                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                  <svg className="w-5 h-5 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  Summary
-                </h3>
-                <div className="prose prose-invert prose-sm max-w-none">
-                  {summary.split("\n").filter(Boolean).map((line, i) => (
-                    <p key={i} className="text-slate-300 mb-3 leading-relaxed">
-                      {line}
-                    </p>
-                  ))}
-                </div>
+              <div className="space-y-6">
+                {(() => {
+                  const lines = summary.split("\n").filter(Boolean);
+                  const tldrIdx = lines.findIndex(l => l.toLowerCase().includes("tl;dr") || l.toLowerCase().includes("tldr"));
+                  const summaryIdx = lines.findIndex(l => l.toLowerCase().match(/^#+?\s*(summary|detailed)/i));
+                  
+                  const tldrLines = tldrIdx !== -1 
+                    ? lines.slice(tldrIdx + 1, summaryIdx !== -1 ? summaryIdx : undefined).filter(l => l.trim().startsWith("-") || l.trim().startsWith("•") || l.trim().match(/^\d+\./))
+                    : [];
+                  
+                  const summaryLines = summaryIdx !== -1 
+                    ? lines.slice(summaryIdx + 1)
+                    : (tldrIdx === -1 ? lines : []);
+
+                  return (
+                    <>
+                      {tldrLines.length > 0 && (
+                        <div className="bg-gradient-to-br from-emerald-500/10 to-teal-500/10 rounded-2xl border border-emerald-500/30 p-6">
+                          <h3 className="text-lg font-bold text-white mb-5 flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                              <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                              </svg>
+                            </div>
+                            TL;DR
+                          </h3>
+                          <ul className="space-y-3">
+                            {tldrLines.map((line, i) => {
+                              const text = line.replace(/^[-•]\s*/, "").replace(/^\d+\.\s*/, "").trim();
+                              return (
+                                <li key={i} className="flex items-start gap-3">
+                                  <span className="mt-2 w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0" />
+                                  <span className="text-slate-200 leading-relaxed">{text}</span>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </div>
+                      )}
+
+                      {summaryLines.length > 0 && (
+                        <div className="bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10 rounded-2xl border border-violet-500/30 p-6">
+                          <h3 className="text-lg font-bold text-white mb-5 flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-lg bg-violet-500/20 flex items-center justify-center">
+                              <svg className="w-4 h-4 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                              </svg>
+                            </div>
+                            Detailed Summary
+                          </h3>
+                          <div className="space-y-4">
+                            {summaryLines.map((line, i) => {
+                              const isBullet = line.trim().startsWith("-") || line.trim().startsWith("•") || line.trim().match(/^\d+\./);
+                              const text = line.replace(/^[-•]\s*/, "").replace(/^\d+\.\s*/, "").trim();
+                              
+                              if (isBullet) {
+                                return (
+                                  <div key={i} className="flex items-start gap-3 pl-2">
+                                    <span className="mt-2 w-1.5 h-1.5 rounded-full bg-violet-400 flex-shrink-0" />
+                                    <span className="text-slate-300 leading-relaxed">{text}</span>
+                                  </div>
+                                );
+                              }
+                              return (
+                                <p key={i} className="text-slate-300 leading-relaxed">
+                                  {line}
+                                </p>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {tldrLines.length === 0 && summaryLines.length === 0 && (
+                        <div className="bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10 rounded-2xl border border-violet-500/30 p-6">
+                          <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                            <svg className="w-5 h-5 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            Summary
+                          </h3>
+                          <div className="space-y-3">
+                            {lines.map((line, i) => (
+                              <p key={i} className="text-slate-300 leading-relaxed">{line}</p>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
             )}
 
