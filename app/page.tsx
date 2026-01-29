@@ -302,7 +302,7 @@ export default function V2Page() {
             href="/v1"
             className="mt-3 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-300 transition"
           >
-            Use V1 (classic)
+            Use V1 (slower)
           </a>
         </header>
 
