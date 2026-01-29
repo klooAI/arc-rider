@@ -45,18 +45,19 @@ export default function HomePage() {
           
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
             Find what matters
-            <br />
+          </h1>
+          <div className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 leading-tight h-[1.2em] overflow-hidden">
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-400">
               in any{" "}
             </span>
             <span
-              className={`text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-400 inline-block transition-all duration-200 ${
+              className={`text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-400 inline-block w-[200px] sm:w-[300px] text-left transition-all duration-200 ${
                 isAnimating ? "opacity-0 translate-y-2" : "opacity-100 translate-y-0"
               }`}
             >
               {rotatingWords[currentIndex]}
             </span>
-          </h1>
+          </div>
           
           <p className="text-xl text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
             Upload any document and instantly find the parts that actually matter to you. 
