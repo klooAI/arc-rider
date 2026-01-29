@@ -83,9 +83,27 @@ export async function POST(req: NextRequest) {
 
     const pages: number[] = pageMap || chunks.map((_, i) => i + 1);
 
+    // Expand the query with related concepts for better semantic matching
+    const expansionRes = await client.chat.completions.create({
+      model: "gpt-4o-mini",
+      temperature: 0.3,
+      max_tokens: 100,
+      messages: [
+        {
+          role: "system",
+          content: "Expand the user's search query into a rich description that includes synonyms and related concepts. Output a single paragraph (50-80 words) that captures the full semantic meaning. Do not use bullet points.",
+        },
+        {
+          role: "user",
+          content: query,
+        },
+      ],
+    });
+    const expandedQuery = expansionRes.choices[0]?.message?.content || query;
+
     const queryRes = await client.embeddings.create({
       model: "text-embedding-3-small",
-      input: query.slice(0, 6000),
+      input: expandedQuery.slice(0, 6000),
     });
     const queryEmbedding = queryRes.data[0].embedding;
 
