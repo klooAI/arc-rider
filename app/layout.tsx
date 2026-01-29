@@ -33,14 +33,14 @@ export default function RootLayout({
                 </span>
               </div>
 
-              {/* Right side – placeholder for now */}
+              {/* Right side navigation */}
               <div className="hidden sm:flex items-center gap-4 text-xs text-blue-100/90">
-                <button className="border-b border-transparent hover:border-[#059669] hover:text-white transition-colors">
+                <a href="/about" className="border-b border-transparent hover:border-[#059669] hover:text-white transition-colors">
                   About
-                </button>
-                <button className="border-b border-transparent hover:border-[#059669] hover:text-white transition-colors">
+                </a>
+                <a href="/how-it-works" className="border-b border-transparent hover:border-[#059669] hover:text-white transition-colors">
                   How it works
-                </button>
+                </a>
               </div>
             </div>
           </header>
