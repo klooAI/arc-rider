@@ -1,8 +1,34 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
+
+const rotatingWords = [
+  "book",
+  "textbook",
+  "document",
+  "report",
+  "manual",
+  "research paper",
+  "case study",
+  "thesis",
+];
 
 export default function HomePage() {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIsAnimating(true);
+      setTimeout(() => {
+        setCurrentIndex((prev) => (prev + 1) % rotatingWords.length);
+        setIsAnimating(false);
+      }, 200);
+    }, 2500);
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       {/* Hero Section */}
@@ -20,7 +46,14 @@ export default function HomePage() {
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
             Find what matters{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-400">
-              in any book
+              in any{" "}
+              <span
+                className={`inline-block transition-all duration-200 ${
+                  isAnimating ? "opacity-0 translate-y-2" : "opacity-100 translate-y-0"
+                }`}
+              >
+                {rotatingWords[currentIndex]}
+              </span>
             </span>
           </h1>
           
