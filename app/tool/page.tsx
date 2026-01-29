@@ -32,6 +32,7 @@ export default function V2Page() {
   const [error, setError] = useState<string | null>(null);
 
   const [query, setQuery] = useState("");
+  const [submittedQuery, setSubmittedQuery] = useState("");
   const [searching, setSearching] = useState(false);
   const [results, setResults] = useState<PageGroup[]>([]);
   const [totalMatches, setTotalMatches] = useState(0);
@@ -185,6 +186,7 @@ export default function V2Page() {
     if (!document?.ready || !query.trim()) return;
 
     setSearching(true);
+    setSubmittedQuery(query.trim());
     setResults([]);
     setSummary("");
     setError(null);
@@ -461,6 +463,16 @@ export default function V2Page() {
                 </button>
               </div>
             </div>
+
+            {(searching || results.length > 0) && submittedQuery && (
+              <div className="flex items-center gap-2 px-4 py-3 bg-slate-800/30 border border-slate-700/50 rounded-xl text-sm">
+                <svg className="w-4 h-4 text-violet-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <span className="text-slate-400">Looking for:</span>
+                <span className="text-white font-medium">{submittedQuery}</span>
+              </div>
+            )}
 
             {results.length > 0 && (
               <div className="bg-slate-800/50 backdrop-blur rounded-2xl border border-slate-700 overflow-hidden">
