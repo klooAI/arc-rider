@@ -4,146 +4,180 @@ export default function HowItWorksPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       <div className="max-w-4xl mx-auto px-4 py-16">
-        <header className="text-center mb-16">
-          <h1 className="text-4xl font-bold text-white mb-6">
-            Read Less. Learn More.
+        <header className="text-center mb-20">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-sm mb-6">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Simple 3-Step Process
+          </div>
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-6 leading-tight">
+            From Document to Insight<br />
+            <span className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">In Under a Minute</span>
           </h1>
-          <p className="text-xl text-slate-300 max-w-2xl mx-auto leading-relaxed">
-            You don't have time to read everything. ArcRider finds the parts that actually matter to you - so you can skip the rest without missing anything important.
+          <p className="text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed">
+            Upload any document, tell us what you're looking for, and get exactly the pages and summaries you need.
           </p>
         </header>
 
-        <div className="bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10 rounded-2xl border border-violet-500/30 p-8 mb-12">
-          <h2 className="text-2xl font-bold text-white mb-4">
-            Built for Busy Minds
+        <div className="relative">
+          <div className="absolute left-8 top-0 bottom-0 w-px bg-gradient-to-b from-violet-500/50 via-fuchsia-500/50 to-transparent hidden md:block" />
+
+          <div className="space-y-12">
+            <div className="relative flex gap-8">
+              <div className="hidden md:flex flex-col items-center">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center shadow-lg shadow-violet-500/30">
+                  <span className="text-2xl font-bold text-white">1</span>
+                </div>
+              </div>
+              <div className="flex-1 bg-slate-800/40 backdrop-blur rounded-2xl border border-slate-700/50 p-8">
+                <div className="md:hidden w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center mb-4">
+                  <span className="text-lg font-bold text-white">1</span>
+                </div>
+                <h3 className="text-xl font-semibold text-white mb-3">
+                  Upload Your Document
+                </h3>
+                <p className="text-slate-400 leading-relaxed mb-4">
+                  Drag and drop any PDF, Word document, or ebook. We support files up to 50MB—that's a 500+ page book with room to spare.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <span className="px-3 py-1 rounded-full bg-slate-700/50 text-slate-300 text-sm">PDF</span>
+                  <span className="px-3 py-1 rounded-full bg-slate-700/50 text-slate-300 text-sm">DOCX</span>
+                  <span className="px-3 py-1 rounded-full bg-slate-700/50 text-slate-300 text-sm">EPUB</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="relative flex gap-8">
+              <div className="hidden md:flex flex-col items-center">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center shadow-lg shadow-violet-500/30">
+                  <span className="text-2xl font-bold text-white">2</span>
+                </div>
+              </div>
+              <div className="flex-1 bg-slate-800/40 backdrop-blur rounded-2xl border border-slate-700/50 p-8">
+                <div className="md:hidden w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center mb-4">
+                  <span className="text-lg font-bold text-white">2</span>
+                </div>
+                <h3 className="text-xl font-semibold text-white mb-3">
+                  Describe What You Need
+                </h3>
+                <p className="text-slate-400 leading-relaxed mb-4">
+                  Type what you're looking for in plain language. Our AI understands context and meaning—not just keywords.
+                </p>
+                <div className="bg-slate-900/50 rounded-xl p-4 border border-slate-700/50">
+                  <p className="text-slate-500 text-sm mb-2">Example searches:</p>
+                  <div className="space-y-2">
+                    <p className="text-slate-300 text-sm">"practical tips for managing anxiety"</p>
+                    <p className="text-slate-300 text-sm">"the author's main argument about climate policy"</p>
+                    <p className="text-slate-300 text-sm">"investment strategies for beginners"</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="relative flex gap-8">
+              <div className="hidden md:flex flex-col items-center">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center shadow-lg shadow-violet-500/30">
+                  <span className="text-2xl font-bold text-white">3</span>
+                </div>
+              </div>
+              <div className="flex-1 bg-slate-800/40 backdrop-blur rounded-2xl border border-slate-700/50 p-8">
+                <div className="md:hidden w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center mb-4">
+                  <span className="text-lg font-bold text-white">3</span>
+                </div>
+                <h3 className="text-xl font-semibold text-white mb-3">
+                  Get Precise Results
+                </h3>
+                <p className="text-slate-400 leading-relaxed mb-4">
+                  Receive a ranked list of relevant sections with exact page numbers and AI-generated explanations of why each matters. Optionally, generate a focused summary.
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-slate-900/50 rounded-xl p-4 border border-slate-700/50">
+                    <div className="text-emerald-400 font-medium mb-1">Page Numbers</div>
+                    <p className="text-slate-500 text-sm">Know exactly where to look</p>
+                  </div>
+                  <div className="bg-slate-900/50 rounded-xl p-4 border border-slate-700/50">
+                    <div className="text-emerald-400 font-medium mb-1">Relevance Scores</div>
+                    <p className="text-slate-500 text-sm">Most important first</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-20 bg-gradient-to-br from-violet-500/5 to-fuchsia-500/5 rounded-3xl border border-violet-500/20 p-10">
+          <h2 className="text-2xl font-bold text-white mb-8 text-center">
+            Why It Works
           </h2>
-          <p className="text-slate-300 leading-relaxed mb-4">
-            If you've ever felt overwhelmed by a long document, struggled to focus on reading, or wished you could just "get to the good parts" - this is for you.
-          </p>
-          <p className="text-slate-300 leading-relaxed">
-            <strong className="text-white">Especially helpful if you have ADHD:</strong> Instead of forcing yourself through hundreds of pages (knowing you'll zone out halfway through), tell ArcRider what you actually care about. It finds those sections instantly, so you can hyperfocus on the parts that matter and skip the rest guilt-free.
-          </p>
-        </div>
-
-        <h2 className="text-2xl font-bold text-white mb-8 text-center">
-          How It Works
-        </h2>
-
-        <div className="space-y-6">
-          <div className="bg-slate-800/50 backdrop-blur rounded-2xl border border-slate-700 p-8">
-            <div className="flex items-start gap-5">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center flex-shrink-0">
-                <span className="text-xl font-bold text-white">1</span>
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className="flex gap-4">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center flex-shrink-0 border border-emerald-500/20">
+                <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
               </div>
               <div>
-                <h3 className="text-xl font-semibold text-white mb-3">
-                  Drop Your Document
-                </h3>
-                <p className="text-slate-300 leading-relaxed">
-                  Upload any PDF, Word doc, or ebook. That 400-page textbook? The lengthy report your boss sent? The self-help book collecting dust? Bring it.
+                <h4 className="font-medium text-white mb-1">Semantic Understanding</h4>
+                <p className="text-slate-400 text-sm leading-relaxed">
+                  Finds related concepts even when different words are used. Search "productivity" and find sections on time management, focus, and efficiency.
                 </p>
               </div>
             </div>
-          </div>
-
-          <div className="bg-slate-800/50 backdrop-blur rounded-2xl border border-slate-700 p-8">
-            <div className="flex items-start gap-5">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center flex-shrink-0">
-                <span className="text-xl font-bold text-white">2</span>
+            <div className="flex gap-4">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center flex-shrink-0 border border-emerald-500/20">
+                <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
               </div>
               <div>
-                <h3 className="text-xl font-semibold text-white mb-3">
-                  Tell It What You Care About
-                </h3>
-                <p className="text-slate-300 leading-relaxed">
-                  Just type what you're looking for in plain English. "How to save money" or "dealing with difficult people" or "the main argument of chapter 3". No special syntax. No keywords. Just say it like you'd ask a friend.
+                <h4 className="font-medium text-white mb-1">Lightning Fast</h4>
+                <p className="text-slate-400 text-sm leading-relaxed">
+                  Results in seconds. What would take hours of reading happens almost instantly.
                 </p>
               </div>
             </div>
-          </div>
-
-          <div className="bg-slate-800/50 backdrop-blur rounded-2xl border border-slate-700 p-8">
-            <div className="flex items-start gap-5">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center flex-shrink-0">
-                <span className="text-xl font-bold text-white">3</span>
+            <div className="flex gap-4">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center flex-shrink-0 border border-emerald-500/20">
+                <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
               </div>
               <div>
-                <h3 className="text-xl font-semibold text-white mb-3">
-                  Get the Pages That Matter
-                </h3>
-                <p className="text-slate-300 leading-relaxed">
-                  ArcRider shows you exactly which pages to read and <em>why</em> they're relevant. No more skimming. No more "I think it was somewhere in chapter 5". Just the specific pages with the information you need.
+                <h4 className="font-medium text-white mb-1">Focused Summaries</h4>
+                <p className="text-slate-400 text-sm leading-relaxed">
+                  AI summaries tailored to your specific question—not generic overviews of the entire document.
                 </p>
               </div>
             </div>
-          </div>
-
-          <div className="bg-slate-800/50 backdrop-blur rounded-2xl border border-slate-700 p-8">
-            <div className="flex items-start gap-5">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center flex-shrink-0">
-                <span className="text-xl font-bold text-white">4</span>
+            <div className="flex gap-4">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center flex-shrink-0 border border-emerald-500/20">
+                <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
               </div>
               <div>
-                <h3 className="text-xl font-semibold text-white mb-3">
-                  Get the Summary (Optional)
-                </h3>
-                <p className="text-slate-300 leading-relaxed">
-                  Want the key points without reading at all? Hit summarize. You'll get a quick TL;DR plus a detailed breakdown - focused specifically on what you asked about, not generic "here's the book" summaries.
+                <h4 className="font-medium text-white mb-1">Verifiable Results</h4>
+                <p className="text-slate-400 text-sm leading-relaxed">
+                  Every result includes page numbers so you can go directly to the source and verify.
                 </p>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="mt-16 bg-slate-800/50 backdrop-blur rounded-2xl border border-slate-700 p-8">
-          <h2 className="text-2xl font-bold text-white mb-6">
-            Why This Actually Works
-          </h2>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="space-y-3">
-              <h3 className="font-semibold text-emerald-400">
-                It Understands Meaning, Not Just Words
-              </h3>
-              <p className="text-slate-300 text-sm leading-relaxed">
-                Search for "making more money" and it finds sections about salary negotiation, side hustles, and investment strategies - even if those exact words aren't used.
-              </p>
-            </div>
-            <div className="space-y-3">
-              <h3 className="font-semibold text-emerald-400">
-                Page Numbers You Can Trust
-              </h3>
-              <p className="text-slate-300 text-sm leading-relaxed">
-                Every result tells you exactly where to look. Open your PDF, go to that page, and the information is right there. No hunting.
-              </p>
-            </div>
-            <div className="space-y-3">
-              <h3 className="font-semibold text-emerald-400">
-                Summaries That Answer YOUR Questions
-              </h3>
-              <p className="text-slate-300 text-sm leading-relaxed">
-                Not generic summaries. Summaries built around what you specifically wanted to know. Ask about "leadership tips" and that's what you get.
-              </p>
-            </div>
-            <div className="space-y-3">
-              <h3 className="font-semibold text-emerald-400">
-                Works in Seconds
-              </h3>
-              <p className="text-slate-300 text-sm leading-relaxed">
-                Upload, search, done. What would take you hours of reading happens in under a minute.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-12 text-center">
+        <div className="mt-16 text-center">
           <a
             href="/"
-            className="inline-flex items-center gap-2 px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-xl hover:from-violet-500 hover:to-fuchsia-500 transition shadow-lg shadow-violet-500/25"
+            className="inline-flex items-center gap-3 px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-2xl hover:from-violet-500 hover:to-fuchsia-500 transition shadow-xl shadow-violet-500/20"
           >
-            Try It Now - It's Free
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            Try It Now
           </a>
           <p className="mt-4 text-slate-500 text-sm">
-            No signup required. Just upload and search.
+            Free to use · No account required
           </p>
         </div>
       </div>
