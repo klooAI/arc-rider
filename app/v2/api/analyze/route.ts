@@ -111,7 +111,7 @@ export async function POST(req: NextRequest) {
         messages: [
           {
             role: "system",
-            content: "Rephrase the user's search query into a brief, natural phrase that shows you understand what they're looking for. Start with a lowercase word. Max 8 words. Examples: 'sections about building trust in relationships', 'passages discussing fear of failure', 'content on practical networking advice'. Do not use quotes.",
+            content: "Rephrase the user's search query into a brief, natural phrase starting with 'pages about' or 'sections on'. Max 6 words total. Examples: 'pages about building trust', 'sections on fear of failure', 'pages about networking tips'. Do not use quotes.",
           },
           {
             role: "user",
