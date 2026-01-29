@@ -8,8 +8,7 @@ const rotatingWords = [
   "document",
   "report",
   "manual",
-  "research paper",
-  "case study",
+  "paper",
   "thesis",
 ];
 
@@ -46,16 +45,17 @@ export default function HomePage() {
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
             Find what matters
           </h1>
-          <div className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 leading-tight h-[1.2em] overflow-hidden">
+          <div className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 leading-tight">
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-400">
               in any{" "}
-            </span>
-            <span
-              className={`text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-400 inline-block w-[200px] sm:w-[300px] text-left transition-all duration-200 ${
-                isAnimating ? "opacity-0 translate-y-2" : "opacity-100 translate-y-0"
-              }`}
-            >
-              {rotatingWords[currentIndex]}
+              <span
+                className={`inline-block transition-opacity duration-200 ${
+                  isAnimating ? "opacity-0" : "opacity-100"
+                }`}
+                style={{ minWidth: "180px" }}
+              >
+                {rotatingWords[currentIndex]}
+              </span>
             </span>
           </div>
           
