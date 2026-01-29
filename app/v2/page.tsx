@@ -6,12 +6,16 @@ type SearchResult = {
   chunkIndex: number;
   score: number;
   text: string;
+  page: number;
 };
 
 type DocumentState = {
   fileName: string;
   chunks: string[];
+  pageMap: number[];
   embeddings: number[][];
+  docType: "pdf" | "docx" | "epub";
+  totalPages: number;
   ready: boolean;
 };
 
@@ -111,6 +115,10 @@ export default function V2Page() {
       if (!extractRes.ok) throw new Error(extractData.error || "Extraction failed");
 
       const chunks: string[] = extractData.chunks || [];
+      const pageMap: number[] = extractData.pageMap || chunks.map((_, i) => i + 1);
+      const totalPages: number = extractData.totalPages || chunks.length;
+      const docType = name.endsWith(".pdf") ? "pdf" : name.endsWith(".docx") ? "docx" : "epub";
+      
       if (!chunks.length) throw new Error("No content found in document");
 
       setProgress({ step: "Creating semantic index...", percent: 40 });
@@ -130,7 +138,10 @@ export default function V2Page() {
       setDocument({
         fileName: file.name,
         chunks,
+        pageMap,
         embeddings: embeddingData.embeddings,
+        docType,
+        totalPages,
         ready: true,
       });
     } catch (err: any) {
@@ -159,6 +170,7 @@ export default function V2Page() {
           query: query.trim(),
           chunks: document.chunks,
           embeddings: document.embeddings,
+          pageMap: document.pageMap,
         }),
       });
 
@@ -418,8 +430,8 @@ export default function V2Page() {
                       data-testid={`result-item-${idx}`}
                     >
                       <div className="flex items-start justify-between gap-3 mb-2">
-                        <span className="text-xs font-medium text-gray-500">
-                          Section {result.chunkIndex + 1}
+                        <span className="text-sm font-semibold text-gray-900">
+                          {document?.docType === "epub" ? `Chapter ${result.page}` : `Page ${result.page}`}
                         </span>
                         <span
                           className={`px-2 py-0.5 text-xs font-semibold rounded-full ${

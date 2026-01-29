@@ -25,7 +25,12 @@ export async function POST(req: NextRequest) {
     const fullText = result.value || "";
     const chunks = smartChunk(fullText, 800);
 
-    return NextResponse.json({ chunks });
+    return NextResponse.json({ 
+      chunks,
+      pageMap: chunks.map((_, i) => i + 1),
+      totalPages: chunks.length,
+      docType: "docx"
+    });
   } catch (err: any) {
     console.error("DOCX extract error:", err);
     return NextResponse.json({ error: err?.message || "Failed to extract DOCX." }, { status: 500 });

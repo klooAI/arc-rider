@@ -21,7 +21,7 @@ function cosineSimilarity(a: number[], b: number[]): number {
 
 export async function POST(req: NextRequest) {
   try {
-    const { query, chunks, embeddings } = await req.json();
+    const { query, chunks, embeddings, pageMap } = await req.json();
 
     if (!query || typeof query !== "string") {
       return new Response(JSON.stringify({ error: "Query required" }), { status: 400 });
@@ -30,6 +30,8 @@ export async function POST(req: NextRequest) {
     if (!Array.isArray(chunks) || !Array.isArray(embeddings)) {
       return new Response(JSON.stringify({ error: "Chunks and embeddings required" }), { status: 400 });
     }
+
+    const pages: number[] = pageMap || chunks.map((_, i) => i + 1);
 
     const queryEmbeddingResponse = await client.embeddings.create({
       model: "text-embedding-3-small",
@@ -41,6 +43,7 @@ export async function POST(req: NextRequest) {
       chunkIndex: idx,
       text,
       score: cosineSimilarity(queryEmbedding, embeddings[idx]),
+      page: pages[idx] || idx + 1,
     }));
 
     const topResults = scored

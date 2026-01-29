@@ -20,6 +20,11 @@ function htmlToText(html: string): string {
     .trim();
 }
 
+type ChunkWithChapter = {
+  text: string;
+  chapter: number;
+};
+
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
@@ -77,7 +82,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid EPUB: no readable content" }, { status: 400 });
     }
 
-    const allText: string[] = [];
+    const chunksWithChapters: ChunkWithChapter[] = [];
+    let chapterNum = 0;
 
     for (const itemId of spineItems) {
       const href = manifest[itemId];
@@ -89,16 +95,22 @@ export async function POST(req: NextRequest) {
         if (content) {
           const plainText = htmlToText(content);
           if (plainText.length > 100) {
-            allText.push(plainText);
+            chapterNum++;
+            const chapterChunks = smartChunk(plainText, 800);
+            for (const chunk of chapterChunks) {
+              chunksWithChapters.push({ text: chunk, chapter: chapterNum });
+            }
           }
         }
       } catch {}
     }
 
-    const combinedText = allText.join("\n\n");
-    const chunks = smartChunk(combinedText, 800);
-
-    return NextResponse.json({ chunks });
+    return NextResponse.json({ 
+      chunks: chunksWithChapters.map(c => c.text),
+      pageMap: chunksWithChapters.map(c => c.chapter),
+      totalPages: chapterNum,
+      docType: "epub"
+    });
   } catch (err: any) {
     console.error("EPUB extract error:", err);
     return NextResponse.json({ error: err?.message || "Failed to extract EPUB." }, { status: 500 });

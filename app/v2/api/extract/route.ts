@@ -3,6 +3,11 @@ import { extractText } from "unpdf";
 
 export const runtime = "nodejs";
 
+type ChunkWithPage = {
+  text: string;
+  page: number;
+};
+
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
@@ -21,41 +26,51 @@ export async function POST(req: NextRequest) {
     const uint8 = new Uint8Array(arrayBuffer);
 
     const { text } = await extractText(uint8, { mergePages: false });
-    const pages = text.map((p) => p.trim()).filter((p) => p.length > 0);
+    const pages = text.map((p) => p.trim());
 
-    if (pages.length === 0) {
+    if (pages.every(p => p.length === 0)) {
       return NextResponse.json({ error: "No readable text found in PDF." }, { status: 400 });
     }
 
-    const fullText = pages.join("\n\n");
-    const chunks = smartChunk(fullText, 800);
+    const chunksWithPages = smartChunkWithPages(pages, 800);
 
-    return NextResponse.json({ chunks });
+    return NextResponse.json({ 
+      chunks: chunksWithPages.map(c => c.text),
+      pageMap: chunksWithPages.map(c => c.page),
+      totalPages: pages.length 
+    });
   } catch (err: any) {
     console.error("PDF extract error:", err);
     return NextResponse.json({ error: err?.message || "Failed to extract PDF." }, { status: 500 });
   }
 }
 
-function smartChunk(text: string, targetSize: number): string[] {
-  const paragraphs = text.split(/\n\s*\n/).filter(p => p.trim().length > 50);
-  const chunks: string[] = [];
-  let current = "";
+function smartChunkWithPages(pages: string[], targetSize: number): ChunkWithPage[] {
+  const chunks: ChunkWithPage[] = [];
 
-  for (const para of paragraphs) {
-    const cleaned = para.replace(/\s+/g, " ").trim();
-    if (!cleaned) continue;
+  for (let pageIdx = 0; pageIdx < pages.length; pageIdx++) {
+    const pageText = pages[pageIdx];
+    if (!pageText || pageText.length < 50) continue;
 
-    if (current.length + cleaned.length > targetSize && current.length > 100) {
-      chunks.push(current.trim());
-      current = cleaned;
-    } else {
-      current += (current ? "\n\n" : "") + cleaned;
+    const pageNum = pageIdx + 1;
+    const paragraphs = pageText.split(/\n\s*\n/).filter(p => p.trim().length > 30);
+
+    let current = "";
+    for (const para of paragraphs) {
+      const cleaned = para.replace(/\s+/g, " ").trim();
+      if (!cleaned) continue;
+
+      if (current.length + cleaned.length > targetSize && current.length > 100) {
+        chunks.push({ text: current.trim(), page: pageNum });
+        current = cleaned;
+      } else {
+        current += (current ? "\n\n" : "") + cleaned;
+      }
     }
-  }
 
-  if (current.trim().length > 50) {
-    chunks.push(current.trim());
+    if (current.trim().length > 50) {
+      chunks.push({ text: current.trim(), page: pageNum });
+    }
   }
 
   return chunks;
