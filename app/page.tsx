@@ -363,7 +363,7 @@ export default function V2Page() {
                 </div>
                 <div className="text-center">
                   <p className="font-medium text-white mb-1">
-                    {file ? file.name : "Upload a book to find what interests you"}
+                    {file ? file.name : "Upload your material"}
                   </p>
                   <p className="text-sm text-slate-500">
                     {file ? `${(file.size / 1024 / 1024).toFixed(1)} MB` : "PDF, DOCX, or EPUB • Max 200MB"}
