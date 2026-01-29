@@ -1,146 +1,80 @@
-// app/page.tsx
 "use client";
 
 import React, { useState, useCallback, useRef } from "react";
 
-type RelevanceResult = {
-  page: number;
+type PageGroup = {
+  startPage: number;
+  endPage: number;
   score: number;
-  reason?: string;
+  description: string;
+  sampleText: string;
 };
 
-type DocType = "pdf" | "docx" | "epub" | null;
+type DocumentState = {
+  fileName: string;
+  chunks: string[];
+  pageMap: number[];
+  embeddings: number[][];
+  docType: "pdf" | "docx" | "epub";
+  totalPages: number;
+  ready: boolean;
+};
 
-// Loading bar with animated progress
-function LoadingBar({ label }: { label: string }) {
-  const [progress, setProgress] = React.useState(0);
-
-  React.useEffect(() => {
-    let value = 0;
-    const interval = setInterval(() => {
-      value += 3 + Math.random() * 5;
-      if (value < 92) {
-        setProgress(value);
-      } else {
-        setProgress(92);
-        clearInterval(interval);
-      }
-    }, 200);
-
-    return () => {
-      clearInterval(interval);
-      setProgress(100);
-    };
-  }, []);
-
-  return (
-    <div className="mt-3 w-full" data-testid="loading-bar">
-      <div className="flex items-center gap-2 text-xs text-gray-600 mb-1.5">
-        <span className="inline-flex h-2 w-2 rounded-full bg-blue-600 animate-pulse" />
-        <span>{label}</span>
-      </div>
-      <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
-        <div
-          className="h-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-300 ease-out rounded-full"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
-    </div>
-  );
-}
-
-// Score badge with color coding
-function ScoreBadge({ score }: { score: number }) {
-  const rounded = Math.round(score);
-  let colorClass = "bg-gray-100 text-gray-700 border-gray-300";
-  
-  if (rounded >= 90) {
-    colorClass = "bg-green-50 text-green-700 border-green-300";
-  } else if (rounded >= 70) {
-    colorClass = "bg-blue-50 text-blue-700 border-blue-300";
-  } else if (rounded >= 50) {
-    colorClass = "bg-yellow-50 text-yellow-700 border-yellow-300";
-  }
-
-  return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold border ${colorClass}`}>
-      {rounded}%
-    </span>
-  );
-}
-
-export default function HomePage() {
+export default function V2Page() {
   const [file, setFile] = useState<File | null>(null);
-  const [docType, setDocType] = useState<DocType>(null);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [text, setText] = useState("");
-  const [pages, setPages] = useState<string[]>([]);
-  const [chapters, setChapters] = useState<string[]>([]);
-
-  const [loadingExtract, setLoadingExtract] = useState(false);
+  const [document, setDocument] = useState<DocumentState | null>(null);
+  const [extracting, setExtracting] = useState(false);
+  const [embedding, setEmbedding] = useState(false);
+  const [progress, setProgress] = useState({ step: "", percent: 0 });
   const [error, setError] = useState<string | null>(null);
 
-  const [interest, setInterest] = useState("");
-  const [relevanceLoading, setRelevanceLoading] = useState(false);
-  const [rankings, setRankings] = useState<RelevanceResult[]>([]);
+  const [query, setQuery] = useState("");
+  const [searching, setSearching] = useState(false);
+  const [results, setResults] = useState<PageGroup[]>([]);
+  const [totalMatches, setTotalMatches] = useState(0);
+  const [showResults, setShowResults] = useState(true);
 
-  const [summaryMode, setSummaryMode] = useState<"full" | "pages">("full");
-  const [startPage, setStartPage] = useState<number>(1);
-  const [endPage, setEndPage] = useState<number>(1);
-  const [summaryLoading, setSummaryLoading] = useState(false);
-  const [summaryRelevantLoading, setSummaryRelevantLoading] = useState(false);
   const [summary, setSummary] = useState("");
+  const [summarizing, setSummarizing] = useState(false);
 
-  const [showRelevant, setShowRelevant] = useState(true);
-  const [showSummaryPanel, setShowSummaryPanel] = useState(true);
-  const [summaryFromRelevant, setSummaryFromRelevant] = useState(false);
+  const [directSummaryMode, setDirectSummaryMode] = useState<"full" | "range">("full");
+  const [pageStart, setPageStart] = useState("");
+  const [pageEnd, setPageEnd] = useState("");
+  const [directSummarizing, setDirectSummarizing] = useState(false);
 
-  const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+  const MAX_FILE_SIZE = 50 * 1024 * 1024;
 
-  // File validation
   const validateFile = useCallback((f: File): string | null => {
     const name = f.name.toLowerCase();
-    const validTypes = [".pdf", ".docx", ".epub"];
-    
-    if (!validTypes.some(ext => name.endsWith(ext))) {
+    if (![".pdf", ".docx", ".epub"].some((ext) => name.endsWith(ext))) {
       return "Please upload a PDF, DOCX, or EPUB file.";
     }
-    
     if (f.size > MAX_FILE_SIZE) {
       return "File too large. Maximum size is 50MB.";
     }
-    
     return null;
   }, []);
 
-  // Handle file selection
-  const handleFileSelect = useCallback((f: File | null) => {
-    if (!f) return;
-    
-    const validationError = validateFile(f);
-    if (validationError) {
-      setError(validationError);
-      return;
-    }
+  const handleFileSelect = useCallback(
+    (f: File | null) => {
+      if (!f) return;
+      const err = validateFile(f);
+      if (err) {
+        setError(err);
+        return;
+      }
+      setFile(f);
+      setError(null);
+      setDocument(null);
+      setResults([]);
+      setSummary("");
+    },
+    [validateFile]
+  );
 
-    setFile(f);
-    setError(null);
-    setText("");
-    setPages([]);
-    setChapters([]);
-    setRankings([]);
-    setSummary("");
-
-    const name = f.name.toLowerCase();
-    if (name.endsWith(".pdf")) setDocType("pdf");
-    else if (name.endsWith(".docx")) setDocType("docx");
-    else if (name.endsWith(".epub")) setDocType("epub");
-    else setDocType(null);
-  }, [validateFile]);
-
-  // Drag and drop handlers
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(true);
@@ -151,637 +85,632 @@ export default function HomePage() {
     setIsDragging(false);
   }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    const f = e.dataTransfer.files?.[0];
-    if (f) handleFileSelect(f);
-  }, [handleFileSelect]);
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setIsDragging(false);
+      const f = e.dataTransfer.files?.[0];
+      if (f) handleFileSelect(f);
+    },
+    [handleFileSelect]
+  );
 
-  // Extract document
-  async function handleExtract() {
+  async function processDocument() {
     if (!file) return;
 
-    setLoadingExtract(true);
+    setExtracting(true);
+    setEmbedding(false);
     setError(null);
-    setText("");
-    setPages([]);
-    setChapters([]);
-    setRankings([]);
+    setDocument(null);
+    setResults([]);
     setSummary("");
+    setProgress({ step: "Extracting text...", percent: 15 });
 
     try {
       const name = file.name.toLowerCase();
-      const isPdf = name.endsWith(".pdf");
-      const isDocx = name.endsWith(".docx");
-      const isEpub = name.endsWith(".epub");
-
-      const endpoint = isPdf
-        ? "/api/extract"
-        : isDocx
-        ? "/api/extract-docx"
-        : "/api/extract-epub";
-
-      const currentType: DocType = isPdf ? "pdf" : isDocx ? "docx" : "epub";
-      setDocType(currentType);
+      const endpoint = name.endsWith(".pdf")
+        ? "/v2/api/extract"
+        : name.endsWith(".docx")
+        ? "/v2/api/extract-docx"
+        : "/v2/api/extract-epub";
 
       const formData = new FormData();
       formData.append("file", file);
 
-      const res = await fetch(endpoint, {
-        method: "POST",
-        body: formData,
-      });
+      const extractRes = await fetch(endpoint, { method: "POST", body: formData });
+      const extractData = await extractRes.json();
+      if (!extractRes.ok) throw new Error(extractData.error || "Extraction failed");
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to extract document.");
+      const chunks: string[] = extractData.chunks || [];
+      const pageMap: number[] = extractData.pageMap || chunks.map((_, i) => i + 1);
+      const totalPages: number = extractData.totalPages || chunks.length;
+      const docType = name.endsWith(".pdf") ? "pdf" : name.endsWith(".docx") ? "docx" : "epub";
 
-      setText(data.text || "");
-      const docPages = Array.isArray(data.pages) ? data.pages : [];
-      setPages(docPages);
+      if (!chunks.length) throw new Error("No content found in document");
 
-      if (Array.isArray(data.chapters)) {
-        setChapters(data.chapters);
-      } else {
-        setChapters([]);
-      }
+      setProgress({ step: "Building semantic index...", percent: 50 });
+      setExtracting(false);
+      setEmbedding(true);
 
-      const total = docPages.length || 1;
-      setStartPage(1);
-      setEndPage(total);
-    } catch (err: any) {
-      console.error(err);
-      setError(err?.message || "Document extraction failed.");
-    } finally {
-      setLoadingExtract(false);
-    }
-  }
-
-  // Relevance scoring
-  async function handleRelevance() {
-    if (!pages.length) {
-      setError("Extract the document first.");
-      return;
-    }
-    if (!interest.trim()) {
-      setError("Tell us what you're looking for.");
-      return;
-    }
-
-    setError(null);
-    setRelevanceLoading(true);
-    setRankings([]);
-
-    try {
-      const res = await fetch("/api/relevance", {
+      const embeddingRes = await fetch("/v2/api/embeddings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ interest, pages }),
+        body: JSON.stringify({ chunks }),
       });
+      const embeddingData = await embeddingRes.json();
+      if (!embeddingRes.ok) throw new Error(embeddingData.error || "Indexing failed");
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to analyze document.");
+      setProgress({ step: "Ready to search!", percent: 100 });
 
-      const rawRankings: any[] = Array.isArray(data.rankings) ? data.rankings : [];
-
-      const normalised: RelevanceResult[] = rawRankings.map((r) => {
-        const rawScore = r.score;
-        const numericScore = typeof rawScore === "number" ? rawScore : Number(rawScore) || 0;
-        const safeScore = Number.isNaN(numericScore) ? 0 : numericScore;
-
-        return {
-          page: r.page,
-          score: safeScore,
-          reason: r.reason,
-        };
+      setDocument({
+        fileName: file.name,
+        chunks,
+        pageMap,
+        embeddings: embeddingData.embeddings,
+        docType,
+        totalPages,
+        ready: true,
       });
-
-      // Filter to show only relevant results (score >= 40 per spec)
-      const filteredRankings = normalised
-        .filter((r) => r.score >= 40 && r.reason && r.reason.trim().length > 0)
-        .sort((a, b) => b.score - a.score);
-
-      setRankings(filteredRankings);
-      setShowRelevant(true);
     } catch (err: any) {
       console.error(err);
-      setError(err?.message || "Error analyzing document.");
+      setError(err?.message || "Failed to process document");
     } finally {
-      setRelevanceLoading(false);
+      setExtracting(false);
+      setEmbedding(false);
     }
   }
 
-  // Summary (full / page range)
-  async function handleSummary() {
-    if (!pages.length) {
-      setError("Extract the document first.");
-      return;
-    }
+  async function handleSearch() {
+    if (!document?.ready || !query.trim()) return;
 
-    setSummaryFromRelevant(false);
+    setSearching(true);
+    setResults([]);
     setSummary("");
-    setSummaryLoading(true);
     setError(null);
+    setShowResults(true);
 
     try {
-      let body: any;
-
-      if (summaryMode === "full") {
-        body = { mode: "full", docPages: pages };
-      } else {
-        const total = pages.length;
-        const start = Math.max(1, Math.min(startPage, total));
-        const end = Math.max(start, Math.min(endPage, total));
-        const range = pages.slice(start - 1, end);
-        body = { mode: "pages", selectedPages: range };
-      }
-
-      const res = await fetch("/api/summary", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to generate summary.");
-
-      setSummary(data.summary || "");
-      setShowSummaryPanel(true);
-    } catch (err: any) {
-      console.error(err);
-      setError(err?.message || "Error generating summary.");
-    } finally {
-      setSummaryLoading(false);
-    }
-  }
-
-  // Summary (relevant sections only) - IMPROVED: passes user interest
-  async function handleSummaryRelevant() {
-    if (!pages.length) {
-      setError("Extract the document first.");
-      return;
-    }
-    if (!rankings.length) {
-      setError("Find relevant sections first.");
-      return;
-    }
-
-    setSummaryFromRelevant(true);
-    setSummary("");
-    setSummaryRelevantLoading(true);
-    setError(null);
-
-    try {
-      // Get top scoring pages (score >= 50)
-      const top = rankings
-        .filter((r) => r.score >= 50)
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 10);
-
-      const selectedPages = top.map((r) => pages[r.page - 1]).filter(Boolean);
-
-      if (!selectedPages.length) {
-        throw new Error("No sections with high enough relevance to summarize. Try a different search term.");
-      }
-
-      const res = await fetch("/api/summary", {
+      const res = await fetch("/v2/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          mode: "pages",
-          selectedPages,
-          interest: interest.trim(), // Pass user's interest for focused summary
+          query: query.trim(),
+          chunks: document.chunks,
+          embeddings: document.embeddings,
+          pageMap: document.pageMap,
+          docType: document.docType,
         }),
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to summarize.");
+      if (!res.ok) throw new Error(data.error || "Search failed");
 
-      setSummary(data.summary || "");
-      setShowSummaryPanel(true);
+      setResults(data.groups || []);
+      setTotalMatches(data.totalMatches || 0);
     } catch (err: any) {
       console.error(err);
-      setError(err?.message || "Error summarizing relevant sections.");
+      setError(err?.message || "Search failed");
     } finally {
-      setSummaryRelevantLoading(false);
+      setSearching(false);
     }
   }
 
-  const totalPages = pages.length;
+  async function handleSummarize() {
+    if (!results.length) return;
 
-  // Group consecutive pages for cleaner display
-  type RelevanceGroup = {
-    startPage: number;
-    endPage: number;
-    topScore: number;
-    topReason?: string;
-  };
+    setSummarizing(true);
+    setSummary("");
+    setError(null);
 
-  const groupedRankings: RelevanceGroup[] = (() => {
-    if (!rankings.length) return [];
+    try {
+      const topTexts = results.slice(0, 8).map((r) => r.sampleText);
+      const res = await fetch("/v2/api/summary", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ texts: topTexts, query: query.trim() }),
+      });
 
-    const byPage = rankings.slice().sort((a, b) => a.page - b.page);
-    const groups: RelevanceGroup[] = [];
-    let current: RelevanceGroup | null = null;
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Summary failed");
 
-    for (const r of byPage) {
-      if (!current) {
-        current = {
-          startPage: r.page,
-          endPage: r.page,
-          topScore: r.score,
-          topReason: r.reason,
-        };
-        continue;
-      }
-
-      if (r.page === current.endPage + 1) {
-        current.endPage = r.page;
-        if (r.score > current.topScore) {
-          current.topScore = r.score;
-          current.topReason = r.reason;
-        }
-      } else {
-        groups.push(current);
-        current = {
-          startPage: r.page,
-          endPage: r.page,
-          topScore: r.score,
-          topReason: r.reason,
-        };
-      }
+      setSummary(data.summary || "");
+    } catch (err: any) {
+      console.error(err);
+      setError(err?.message || "Failed to generate summary");
+    } finally {
+      setSummarizing(false);
     }
+  }
 
-    if (current) groups.push(current);
-    return groups.sort((a, b) => b.topScore - a.topScore);
-  })();
-
-  // Format page/chapter range label - always show chapter number for EPUBs
-  function formatRangeLabel(group: RelevanceGroup): string {
-    if (docType === "epub") {
-      const startIdx = group.startPage - 1;
-      const startTitle = chapters[startIdx]?.trim() || "";
-
-      if (group.startPage === group.endPage) {
-        // Single chapter: "Chapter 12: Title" or just "Chapter 12"
-        return startTitle 
-          ? `Chapter ${group.startPage}: ${startTitle}`
-          : `Chapter ${group.startPage}`;
-      }
-      // Range of chapters: "Chapters 12-15"
-      return `Chapters ${group.startPage}–${group.endPage}`;
-    }
-
+  function formatPageRange(group: PageGroup): string {
+    const label = document?.docType === "epub" ? "Chapter" : "Page";
     if (group.startPage === group.endPage) {
-      return `Page ${group.startPage}`;
+      return `${label} ${group.startPage}`;
     }
-    return `Pages ${group.startPage}–${group.endPage}`;
+    return `${label}s ${group.startPage}–${group.endPage}`;
   }
 
-  // Parse summary markdown
-  const summaryBlocks = summary
-    .split("\n")
-    .map((rawLine) => {
-      const line = rawLine.trim();
-      if (!line) return null;
+  async function handleDirectSummary() {
+    if (!document?.ready) return;
 
-      const boldProcessed = line.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+    setDirectSummarizing(true);
+    setSummary("");
+    setError(null);
 
-      if (/^#+\s*/.test(line)) {
-        return { type: "heading" as const, html: boldProcessed.replace(/^#+\s*/, "") };
+    try {
+      let textsToSummarize: string[] = [];
+
+      if (directSummaryMode === "full") {
+        textsToSummarize = document.chunks.slice(0, 50);
+      } else {
+        const start = parseInt(pageStart) || 1;
+        const end = parseInt(pageEnd) || start;
+        
+        if (start < 1 || end < start || start > document.totalPages) {
+          throw new Error(`Please enter valid page numbers between 1 and ${document.totalPages}`);
+        }
+
+        textsToSummarize = document.chunks.filter((_, idx) => {
+          const page = document.pageMap[idx];
+          return page >= start && page <= end;
+        });
+
+        if (textsToSummarize.length === 0) {
+          throw new Error("No content found in the specified page range");
+        }
       }
-      if (/^[-*]\s+/.test(line)) {
-        return { type: "bullet" as const, html: boldProcessed.replace(/^[-*]\s+/, "") };
-      }
-      return { type: "paragraph" as const, html: boldProcessed };
-    })
-    .filter(Boolean) as { type: "heading" | "bullet" | "paragraph"; html: string }[];
+
+      const res = await fetch("/v2/api/summary", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ texts: textsToSummarize }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Summary failed");
+
+      setSummary(data.summary || "");
+    } catch (err: any) {
+      console.error(err);
+      setError(err?.message || "Failed to generate summary");
+    } finally {
+      setDirectSummarizing(false);
+    }
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white text-gray-900 px-4 sm:px-6 py-8 sm:py-12 flex flex-col items-center">
-      {/* Header */}
-      <div className="text-center mb-8 sm:mb-10">
-        <h1 className="text-3xl sm:text-4xl font-bold text-blue-600 mb-2 tracking-tight" data-testid="title">
-          ArcRider
-        </h1>
-        <p className="text-base sm:text-lg text-gray-600 max-w-xl mx-auto">
-          Focus on the things that matter.
-        </p>
-        <a 
-          href="/v2" 
-          className="inline-block mt-3 text-sm text-indigo-600 hover:text-indigo-800 font-medium bg-indigo-50 px-4 py-2 rounded-full hover:bg-indigo-100 transition"
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      <div className="max-w-3xl mx-auto px-4 py-12">
+        <header className="text-center mb-12">
+          <div className="inline-flex items-center gap-2 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <h1 className="text-3xl font-bold text-white" data-testid="title">
+              ArcRider
+            </h1>
+          </div>
+          <p className="text-slate-400 text-lg">
+            Focus on the things that matter.
+          </p>
+          <a
+            href="/v1"
+            className="mt-3 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-300 transition"
+          >
+            Use classic version
+          </a>
+        </header>
+
+        <div
+          className={`relative p-8 rounded-2xl border-2 border-dashed transition-all duration-300 ${
+            isDragging
+              ? "border-violet-400 bg-violet-500/10"
+              : document?.ready
+              ? "border-emerald-400/50 bg-emerald-500/5"
+              : "border-slate-600 bg-slate-800/50 hover:border-slate-500"
+          }`}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          data-testid="upload-zone"
         >
-          ✨ Try V2 with lightning-fast embeddings →
-        </a>
-      </div>
+          <div className="flex flex-col items-center gap-5">
+            {document?.ready ? (
+              <div className="text-center">
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 rounded-full text-sm font-medium mb-3">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  Indexed & Ready
+                </div>
+                <p className="font-semibold text-white text-lg">{document.fileName}</p>
+                <p className="text-sm text-slate-400 mt-1">
+                  {document.totalPages} pages • {document.chunks.length} searchable sections
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="w-16 h-16 rounded-2xl bg-slate-700/50 flex items-center justify-center">
+                  <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <div className="text-center">
+                  <p className="font-medium text-white mb-1">
+                    {file ? file.name : "Drop your document here"}
+                  </p>
+                  <p className="text-sm text-slate-500">
+                    {file ? `${(file.size / 1024 / 1024).toFixed(1)} MB` : "PDF, DOCX, or EPUB • Max 50MB"}
+                  </p>
+                </div>
 
-      {/* Upload Section */}
-      <div
-        className={`w-full max-w-xl p-6 rounded-2xl shadow-sm border-2 border-dashed transition-all duration-200 mb-8 ${
-          isDragging
-            ? "border-blue-500 bg-blue-50"
-            : file
-            ? "border-green-300 bg-green-50"
-            : "border-gray-300 bg-white hover:border-gray-400"
-        }`}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        data-testid="upload-zone"
-      >
-        <div className="flex flex-col items-center gap-4">
-          <div className="text-center">
-            <p className="text-sm font-medium text-gray-700 mb-1">
-              {file ? file.name : "Drop your document here"}
-            </p>
-            <p className="text-xs text-gray-500">
-              {file
-                ? `${(file.size / 1024 / 1024).toFixed(1)} MB • ${docType?.toUpperCase()}`
-                : "PDF, DOCX, or EPUB • Max 50MB"}
-            </p>
-          </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf,.docx,.epub"
+                  onChange={(e) => handleFileSelect(e.target.files?.[0] || null)}
+                  className="hidden"
+                  data-testid="file-input"
+                />
 
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".pdf,.docx,.epub"
-            onChange={(e) => handleFileSelect(e.target.files?.[0] || null)}
-            className="hidden"
-            data-testid="file-input"
-          />
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="px-5 py-2.5 font-medium text-slate-300 bg-slate-700 border border-slate-600 rounded-xl hover:bg-slate-600 transition"
+                    data-testid="button-browse"
+                  >
+                    Browse files
+                  </button>
 
-          <div className="flex gap-3">
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition"
-              data-testid="button-browse"
-            >
-              Browse files
-            </button>
-
-            {file && (
-              <button
-                onClick={handleExtract}
-                disabled={loadingExtract}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
-                data-testid="button-extract"
-              >
-                {loadingExtract ? "Extracting..." : "Extract text"}
-              </button>
-            )}
-          </div>
-
-          {loadingExtract && <LoadingBar label="Reading your document..." />}
-
-          {error && (
-            <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-2 w-full" data-testid="error-message">
-              {error}
-            </p>
-          )}
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="w-full max-w-3xl space-y-6">
-        {/* Success Banner */}
-        {text && (
-          <div className="bg-green-50 border border-green-200 text-green-800 text-sm rounded-xl px-4 py-3 flex items-center gap-2" data-testid="success-banner">
-            <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-            </svg>
-            <span>
-              {docType === "epub"
-                ? `Extracted ${pages.length} chapter${pages.length === 1 ? "" : "s"}`
-                : `Extracted ${pages.length} page${pages.length === 1 ? "" : "s"}`}
-            </span>
-          </div>
-        )}
-
-        {/* Analysis Panel */}
-        {pages.length > 0 && (
-          <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-8">
-            {/* Relevance Section */}
-            <section className="space-y-4">
-              <h2 className="text-lg font-semibold text-gray-900">
-                What are you looking for?
-              </h2>
-
-              <textarea
-                value={interest}
-                onChange={(e) => setInterest(e.target.value)}
-                rows={2}
-                className="w-full border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition resize-none"
-                placeholder="e.g., saving money, buying a house, career advancement, managing stress..."
-                data-testid="input-interest"
-              />
-
-              <button
-                onClick={handleRelevance}
-                disabled={relevanceLoading || !interest.trim()}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 px-5 rounded-xl text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition"
-                data-testid="button-find-relevant"
-              >
-                {relevanceLoading ? "Analyzing..." : `Find relevant ${docType === "epub" ? "chapters" : "sections"}`}
-              </button>
-
-              {relevanceLoading && (
-                <LoadingBar label={`Scanning ${docType === "epub" ? "chapters" : "pages"} for your topic...`} />
-              )}
-
-              {/* Results */}
-              {groupedRankings.length > 0 && (
-                <div className="space-y-3 mt-4" data-testid="relevance-results">
-                  <div className="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-3 border border-gray-200">
-                    <div className="flex items-center gap-3">
-                      <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">
-                        {groupedRankings.length}
-                      </span>
-                      <span className="font-medium text-gray-900">
-                        Relevant {docType === "epub" ? "chapters" : "sections"} found
-                      </span>
-                    </div>
-
+                  {file && (
                     <button
-                      onClick={() => setShowRelevant((prev) => !prev)}
-                      className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
-                      data-testid="button-toggle-results"
+                      onClick={processDocument}
+                      disabled={extracting || embedding}
+                      className="px-5 py-2.5 font-medium text-white bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-xl hover:from-violet-500 hover:to-fuchsia-500 disabled:opacity-50 transition shadow-lg shadow-violet-500/25"
+                      data-testid="button-process"
                     >
-                      {showRelevant ? "Hide" : "Show"}
-                      <span className={`transition-transform ${showRelevant ? "rotate-180" : ""}`}>▲</span>
+                      {extracting ? "Extracting..." : embedding ? "Indexing..." : "Index Document"}
                     </button>
-                  </div>
-
-                  {showRelevant && (
-                    <>
-                      <div className="space-y-2">
-                        {groupedRankings.map((group, idx) => (
-                          <div
-                            key={`${group.startPage}-${group.endPage}-${idx}`}
-                            className="border border-gray-200 rounded-xl p-4 bg-white hover:bg-gray-50 transition"
-                            data-testid={`result-item-${idx}`}
-                          >
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="flex-1">
-                                <p className="font-medium text-gray-900 mb-1">
-                                  {formatRangeLabel(group)}
-                                </p>
-                                {group.topReason && (
-                                  <p className="text-sm text-gray-600 leading-relaxed">
-                                    {group.topReason}
-                                  </p>
-                                )}
-                              </div>
-                              <ScoreBadge score={group.topScore} />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-
-                      <button
-                        onClick={handleSummaryRelevant}
-                        disabled={summaryRelevantLoading}
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-xl text-sm font-medium disabled:opacity-50 transition"
-                        data-testid="button-summarize-relevant"
-                      >
-                        {summaryRelevantLoading ? "Summarizing..." : "Summarize these sections"}
-                      </button>
-
-                      {summaryRelevantLoading && !summary && (
-                        <LoadingBar label="Creating a focused summary..." />
-                      )}
-                    </>
                   )}
                 </div>
-              )}
+              </>
+            )}
 
-              {!relevanceLoading && rankings.length === 0 && interest.trim() && pages.length > 0 && (
-                <p className="text-sm text-gray-500 italic">
-                  No highly relevant sections found. Try different search terms.
-                </p>
-              )}
-            </section>
+            {(extracting || embedding) && (
+              <div className="w-full max-w-sm mt-2">
+                <div className="flex items-center gap-2 text-sm text-slate-400 mb-2">
+                  <div className="w-2 h-2 rounded-full bg-violet-500 animate-pulse" />
+                  <span>{progress.step}</span>
+                </div>
+                <div className="w-full bg-slate-700 rounded-full h-1.5 overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-violet-500 to-fuchsia-500 transition-all duration-500"
+                    style={{ width: `${progress.percent}%` }}
+                  />
+                </div>
+              </div>
+            )}
 
-            {/* Summary Section */}
-            <section className="space-y-4 pt-6 border-t border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900">
+            {error && (
+              <div className="w-full max-w-sm p-4 bg-red-500/10 border border-red-500/30 rounded-xl" data-testid="error-message">
+                <p className="text-sm text-red-400">{error}</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {document?.ready && (
+          <div className="mt-8 space-y-6">
+            <div className="bg-slate-800/50 backdrop-blur rounded-2xl border border-slate-700 p-6">
+              <label className="block text-lg font-semibold text-white mb-4">
+                What are you looking for?
+              </label>
+              <div className="flex gap-3">
+                <input
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                  placeholder="e.g., investment strategies, time management, dealing with stress..."
+                  className="flex-1 px-4 py-3.5 bg-slate-900/50 border border-slate-600 rounded-xl text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition"
+                  data-testid="input-query"
+                />
+                <button
+                  onClick={handleSearch}
+                  disabled={searching || !query.trim()}
+                  className="px-6 py-3.5 font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl hover:from-emerald-400 hover:to-teal-400 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-lg shadow-emerald-500/25"
+                  data-testid="button-search"
+                >
+                  {searching ? (
+                    <span className="flex items-center gap-2">
+                      <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      Analyzing...
+                    </span>
+                  ) : (
+                    "Find relevant sections"
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {results.length > 0 && (
+              <div className="bg-slate-800/50 backdrop-blur rounded-2xl border border-slate-700 overflow-hidden">
+                <div className="flex items-center justify-between p-5 border-b border-slate-700">
+                  <button
+                    onClick={() => setShowResults(!showResults)}
+                    className="flex items-center gap-3 text-left"
+                  >
+                    <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 font-bold text-sm">
+                      {results.length}
+                    </span>
+                    <span className="text-white font-semibold">
+                      Relevant sections found
+                    </span>
+                    <svg
+                      className={`w-5 h-5 text-slate-400 transition-transform ${showResults ? "rotate-180" : ""}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={handleSummarize}
+                    disabled={summarizing}
+                    className="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-lg hover:from-violet-400 hover:to-fuchsia-400 disabled:opacity-50 transition"
+                    data-testid="button-summarize"
+                  >
+                    {summarizing ? "Summarizing..." : "Summarize these"}
+                  </button>
+                </div>
+
+                {showResults && (
+                  <div className="divide-y divide-slate-700/50">
+                    {results.map((group, idx) => (
+                      <div
+                        key={`${group.startPage}-${idx}`}
+                        className="p-5 hover:bg-slate-700/20 transition"
+                        data-testid={`result-item-${idx}`}
+                      >
+                        <div className="flex items-start justify-between gap-4 mb-2">
+                          <h3 className="text-lg font-bold text-white">
+                            {formatPageRange(group)}
+                          </h3>
+                          <span className="flex-shrink-0 px-3 py-1 text-sm font-bold rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                            {group.score}%
+                          </span>
+                        </div>
+                        <p className="text-slate-300 leading-relaxed">
+                          {group.description}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {summary && (
+              <div className="space-y-6">
+                {(() => {
+                  const lines = summary.split("\n").filter(Boolean);
+                  const tldrIdx = lines.findIndex(l => l.toLowerCase().includes("tl;dr") || l.toLowerCase().includes("tldr"));
+                  const summaryIdx = lines.findIndex(l => l.toLowerCase().match(/^#+?\s*(summary|detailed)/i));
+                  
+                  const tldrLines = tldrIdx !== -1 
+                    ? lines.slice(tldrIdx + 1, summaryIdx !== -1 ? summaryIdx : undefined).filter(l => l.trim().startsWith("-") || l.trim().startsWith("•") || l.trim().match(/^\d+\./))
+                    : [];
+                  
+                  const summaryLines = summaryIdx !== -1 
+                    ? lines.slice(summaryIdx + 1)
+                    : (tldrIdx === -1 ? lines : []);
+
+                  return (
+                    <>
+                      {tldrLines.length > 0 && (
+                        <div className="bg-gradient-to-br from-emerald-500/10 to-teal-500/10 rounded-2xl border border-emerald-500/30 p-6">
+                          <h3 className="text-lg font-bold text-white mb-5 flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                              <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                              </svg>
+                            </div>
+                            TL;DR
+                          </h3>
+                          <ul className="space-y-3">
+                            {tldrLines.map((line, i) => {
+                              const text = line.replace(/^[-•]\s*/, "").replace(/^\d+\.\s*/, "").trim();
+                              const parts = text.split(/\*\*(.+?)\*\*/g);
+                              return (
+                                <li key={i} className="flex items-start gap-3">
+                                  <span className="mt-2 w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0" />
+                                  <span className="text-slate-200 leading-relaxed">
+                                    {parts.map((part, j) => 
+                                      j % 2 === 1 ? <strong key={j} className="text-white font-semibold">{part}</strong> : part
+                                    )}
+                                  </span>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </div>
+                      )}
+
+                      {summaryLines.length > 0 && (
+                        <div className="bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10 rounded-2xl border border-violet-500/30 p-6">
+                          <h3 className="text-lg font-bold text-white mb-5 flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-lg bg-violet-500/20 flex items-center justify-center">
+                              <svg className="w-4 h-4 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                              </svg>
+                            </div>
+                            Detailed Summary
+                          </h3>
+                          <div className="space-y-4">
+                            {summaryLines.map((line, i) => {
+                              const isBullet = line.trim().startsWith("-") || line.trim().startsWith("•") || line.trim().match(/^\d+\./);
+                              const text = line.replace(/^[-•]\s*/, "").replace(/^\d+\.\s*/, "").trim();
+                              const parts = text.split(/\*\*(.+?)\*\*/g);
+                              const renderText = parts.map((part, j) => 
+                                j % 2 === 1 ? <strong key={j} className="text-white font-semibold">{part}</strong> : part
+                              );
+                              
+                              if (isBullet) {
+                                return (
+                                  <div key={i} className="flex items-start gap-3 pl-2">
+                                    <span className="mt-2 w-1.5 h-1.5 rounded-full bg-violet-400 flex-shrink-0" />
+                                    <span className="text-slate-300 leading-relaxed">{renderText}</span>
+                                  </div>
+                                );
+                              }
+                              return (
+                                <p key={i} className="text-slate-300 leading-relaxed">
+                                  {renderText}
+                                </p>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {tldrLines.length === 0 && summaryLines.length === 0 && (
+                        <div className="bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10 rounded-2xl border border-violet-500/30 p-6">
+                          <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                            <svg className="w-5 h-5 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            Summary
+                          </h3>
+                          <div className="space-y-3">
+                            {lines.map((line, i) => {
+                              const parts = line.split(/\*\*(.+?)\*\*/g);
+                              return (
+                                <p key={i} className="text-slate-300 leading-relaxed">
+                                  {parts.map((part, j) => 
+                                    j % 2 === 1 ? <strong key={j} className="text-white font-semibold">{part}</strong> : part
+                                  )}
+                                </p>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
+            )}
+
+            {!searching && results.length === 0 && query && (
+              <div className="text-center py-12">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-700/50 flex items-center justify-center">
+                  <svg className="w-8 h-8 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <p className="text-slate-400">No relevant sections found. Try different search terms.</p>
+              </div>
+            )}
+
+            <div className="bg-slate-800/50 backdrop-blur rounded-2xl border border-slate-700 p-6">
+              <h2 className="text-lg font-semibold text-white mb-4">
                 Or summarize directly
               </h2>
 
-              <div className="flex flex-wrap items-center gap-4">
-                <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <div className="flex flex-wrap items-center gap-6 mb-5">
+                <label className="flex items-center gap-2.5 cursor-pointer group">
                   <input
                     type="radio"
-                    name="summaryMode"
-                    value="full"
-                    checked={summaryMode === "full"}
-                    onChange={() => setSummaryMode("full")}
-                    className="text-blue-600 focus:ring-blue-500"
+                    name="directMode"
+                    checked={directSummaryMode === "full"}
+                    onChange={() => setDirectSummaryMode("full")}
+                    className="w-4 h-4 text-violet-500 bg-slate-700 border-slate-600 focus:ring-violet-500 focus:ring-offset-slate-800"
                   />
-                  Entire document
+                  <span className="text-slate-300 group-hover:text-white transition">Entire document</span>
                 </label>
 
-                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <label className="flex items-center gap-2.5 cursor-pointer group">
                   <input
                     type="radio"
-                    name="summaryMode"
-                    value="pages"
-                    checked={summaryMode === "pages"}
-                    onChange={() => setSummaryMode("pages")}
-                    className="text-blue-600 focus:ring-blue-500"
+                    name="directMode"
+                    checked={directSummaryMode === "range"}
+                    onChange={() => setDirectSummaryMode("range")}
+                    className="w-4 h-4 text-violet-500 bg-slate-700 border-slate-600 focus:ring-violet-500 focus:ring-offset-slate-800"
                   />
-                  {docType === "epub" ? "Selected chapters" : "Page range"}
+                  <span className="text-slate-300 group-hover:text-white transition">Page range</span>
                 </label>
               </div>
 
-              {summaryMode === "pages" && (
-                <div className="flex gap-4 items-center flex-wrap">
-                  <div className="flex items-center gap-2">
-                    <label className="text-sm text-gray-600">From</label>
-                    <input
-                      type="number"
-                      value={startPage}
-                      min={1}
-                      max={totalPages}
-                      onChange={(e) => setStartPage(Number(e.target.value))}
-                      className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-20"
-                      data-testid="input-start-page"
-                    />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <label className="text-sm text-gray-600">to</label>
-                    <input
-                      type="number"
-                      value={endPage}
-                      min={1}
-                      max={totalPages}
-                      onChange={(e) => setEndPage(Number(e.target.value))}
-                      className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-20"
-                      data-testid="input-end-page"
-                    />
-                  </div>
-                  <span className="text-xs text-gray-500">of {totalPages}</span>
+              {directSummaryMode === "range" && (
+                <div className="flex items-center gap-3 mb-5">
+                  <input
+                    type="number"
+                    min="1"
+                    max={document?.totalPages || 999}
+                    value={pageStart}
+                    onChange={(e) => setPageStart(e.target.value)}
+                    placeholder="From"
+                    className="w-24 px-3 py-2.5 bg-slate-900/50 border border-slate-600 rounded-lg text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent"
+                  />
+                  <span className="text-slate-500">to</span>
+                  <input
+                    type="number"
+                    min="1"
+                    max={document?.totalPages || 999}
+                    value={pageEnd}
+                    onChange={(e) => setPageEnd(e.target.value)}
+                    placeholder="To"
+                    className="w-24 px-3 py-2.5 bg-slate-900/50 border border-slate-600 rounded-lg text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent"
+                  />
+                  <span className="text-sm text-slate-500">
+                    (of {document?.totalPages || 0} pages)
+                  </span>
                 </div>
               )}
 
               <button
-                onClick={handleSummary}
-                disabled={summaryLoading}
-                className="bg-gray-900 hover:bg-gray-800 text-white py-2.5 px-5 rounded-xl text-sm font-medium disabled:opacity-50 transition"
-                data-testid="button-summarize"
+                onClick={handleDirectSummary}
+                disabled={directSummarizing || summarizing}
+                className="px-6 py-3 font-semibold text-white bg-slate-700 border border-slate-600 rounded-xl hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                data-testid="button-direct-summary"
               >
-                {summaryLoading ? "Summarizing..." : "Generate summary"}
+                {directSummarizing ? (
+                  <span className="flex items-center gap-2">
+                    <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Generating...
+                  </span>
+                ) : (
+                  "Generate summary"
+                )}
               </button>
+            </div>
+          </div>
+        )}
 
-              {summaryLoading && <LoadingBar label="Generating summary..." />}
-
-              {/* Summary Output */}
-              {summary && (
-                <div className="mt-4 bg-gray-50 border border-gray-200 rounded-xl overflow-hidden" data-testid="summary-output">
-                  <div className="flex items-center justify-between px-4 py-3 bg-gray-100 border-b border-gray-200">
-                    <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">
-                      {summaryFromRelevant
-                        ? `Summary • ${docType === "epub" ? "Relevant chapters" : "Relevant sections"}`
-                        : summaryMode === "full"
-                        ? "Summary • Full document"
-                        : `Summary • ${docType === "epub" ? "Chapters" : "Pages"} ${startPage}–${endPage}`}
-                    </span>
-                    <button
-                      onClick={() => setShowSummaryPanel((prev) => !prev)}
-                      className="text-xs text-gray-600 hover:text-gray-900"
-                    >
-                      {showSummaryPanel ? "Collapse" : "Expand"}
-                    </button>
-                  </div>
-
-                  {showSummaryPanel && (
-                    <div className="p-4 max-h-[50vh] overflow-auto space-y-3 text-sm">
-                      {summaryBlocks.map((block, idx) => {
-                        if (block.type === "heading") {
-                          return (
-                            <p
-                              key={idx}
-                              className="mt-3 text-sm font-bold text-gray-900 uppercase tracking-wide"
-                              dangerouslySetInnerHTML={{ __html: block.html }}
-                            />
-                          );
-                        }
-                        if (block.type === "bullet") {
-                          return (
-                            <div key={idx} className="flex items-start gap-2 text-gray-700">
-                              <span className="mt-1 text-blue-600">•</span>
-                              <span className="leading-relaxed" dangerouslySetInnerHTML={{ __html: block.html }} />
-                            </div>
-                          );
-                        }
-                        return (
-                          <p key={idx} className="leading-relaxed text-gray-700" dangerouslySetInnerHTML={{ __html: block.html }} />
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              )}
-            </section>
+        {document?.ready && (
+          <div className="mt-8 text-center">
+            <button
+              onClick={() => {
+                setFile(null);
+                setDocument(null);
+                setResults([]);
+                setSummary("");
+                setQuery("");
+              }}
+              className="text-sm text-slate-500 hover:text-slate-300 transition"
+              data-testid="button-reset"
+            >
+              Upload a different document
+            </button>
           </div>
         )}
       </div>
