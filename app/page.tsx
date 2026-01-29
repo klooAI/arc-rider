@@ -75,7 +75,7 @@ export default function HomePage() {
               Try it free
             </a>
             <a
-              href="#how-it-works"
+              href="/how-it-works"
               className="px-8 py-4 text-lg font-semibold text-slate-300 bg-slate-800 border border-slate-700 rounded-xl hover:bg-slate-700 transition"
             >
               See how it works
