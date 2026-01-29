@@ -84,14 +84,17 @@ export async function POST(req: NextRequest) {
     const pages: number[] = pageMap || chunks.map((_, i) => i + 1);
 
     // Expand the query with related concepts for better semantic matching
+    const isShortQuery = query.trim().split(/\s+/).length <= 2;
     const expansionRes = await client.chat.completions.create({
       model: "gpt-4o-mini",
-      temperature: 0.3,
-      max_tokens: 100,
+      temperature: 0.4,
+      max_tokens: 150,
       messages: [
         {
           role: "system",
-          content: "Expand the user's search query into a rich description that includes synonyms and related concepts. Output a single paragraph (50-80 words) that captures the full semantic meaning. Do not use bullet points.",
+          content: isShortQuery
+            ? "The user is searching for a topic in a book. Expand this short query into a comprehensive description (80-120 words) that captures ALL related concepts, themes, situations, emotions, and scenarios. Include explicit and implicit meanings, related activities, consequences, and contextual uses. Be thorough."
+            : "Expand the user's search query into a rich description that includes synonyms and related concepts. Output a single paragraph (50-80 words) that captures the full semantic meaning. Do not use bullet points.",
         },
         {
           role: "user",
@@ -113,7 +116,16 @@ export async function POST(req: NextRequest) {
       score: cosineSimilarity(queryEmbedding, embeddings[idx]),
     }));
 
-    const relevant = scored.filter((r) => r.score > 0.25);
+    // Sort by score and take results above threshold OR top results if none meet threshold
+    const sortedScores = [...scored].sort((a, b) => b.score - a.score);
+    const threshold = isShortQuery ? 0.20 : 0.22;
+    let relevant = sortedScores.filter((r) => r.score > threshold);
+    
+    // If no results above threshold, show top 5 with lower confidence
+    const showingLowerConfidence = relevant.length === 0 && sortedScores.length > 0;
+    if (showingLowerConfidence) {
+      relevant = sortedScores.slice(0, 5).filter((r) => r.score > 0.15);
+    }
     
     if (relevant.length === 0) {
       return NextResponse.json({ groups: [] });
@@ -152,7 +164,9 @@ export async function POST(req: NextRequest) {
     const enrichedGroups = topGroups.map((group, idx) => ({
       startPage: group.startPage,
       endPage: group.endPage,
-      score: Math.min(Math.round(group.avgScore * 100 + 40), 95),
+      score: showingLowerConfidence 
+        ? Math.min(Math.round(group.avgScore * 100 + 20), 60)
+        : Math.min(Math.round(group.avgScore * 100 + 40), 95),
       description: descriptions[idx] || "Relevant content found.",
       sampleText: group.texts[0]?.slice(0, 300) || "",
     }));
@@ -160,7 +174,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ 
       groups: enrichedGroups,
       totalMatches: relevant.length,
-      docType: docType || "pdf"
+      docType: docType || "pdf",
+      lowerConfidence: showingLowerConfidence
     });
   } catch (err: any) {
     console.error("Analyze error:", err);
