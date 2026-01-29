@@ -461,9 +461,14 @@ export default function HomePage() {
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white text-gray-900 px-4 sm:px-6 py-8 sm:py-12 flex flex-col items-center">
       {/* Header */}
       <div className="text-center mb-8 sm:mb-10">
-        <h1 className="text-3xl sm:text-4xl font-bold text-blue-600 mb-2 tracking-tight" data-testid="title">
-          ArcRider
-        </h1>
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <h1 className="text-3xl sm:text-4xl font-bold text-blue-600 tracking-tight" data-testid="title">
+            ArcRider
+          </h1>
+          <span className="px-2 py-0.5 text-xs font-bold bg-blue-600 text-white rounded-full">
+            V1
+          </span>
+        </div>
         <p className="text-base sm:text-lg text-gray-600 max-w-xl mx-auto">
           Focus on the things that matter.
         </p>
@@ -471,7 +476,7 @@ export default function HomePage() {
           href="/" 
           className="inline-block mt-3 text-sm text-indigo-600 hover:text-indigo-800 font-medium bg-indigo-50 px-4 py-2 rounded-full hover:bg-indigo-100 transition"
         >
-          ← Back to current version
+          ← Back to V2
         </a>
       </div>
 

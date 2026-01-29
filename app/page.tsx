@@ -291,6 +291,9 @@ export default function V2Page() {
             <h1 className="text-3xl font-bold text-white" data-testid="title">
               ArcRider
             </h1>
+            <span className="px-2 py-0.5 text-xs font-bold bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white rounded-full">
+              V2
+            </span>
           </div>
           <p className="text-slate-400 text-lg">
             Focus on the things that matter.
@@ -299,7 +302,7 @@ export default function V2Page() {
             href="/v1"
             className="mt-3 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-300 transition"
           >
-            Use classic version
+            Use V1 (classic)
           </a>
         </header>
 
