@@ -477,7 +477,7 @@ export default function V2Page() {
                     `Searching for "${submittedQuery}"...`
                   ) : (
                     <>
-                      <span className="font-semibold text-white">Showing sections about:</span>{" "}
+                      <span className="font-semibold text-white">Exploring:</span>{" "}
                       {queryInterpretation || submittedQuery}
                     </>
                   )}
