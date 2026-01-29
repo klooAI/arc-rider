@@ -43,21 +43,18 @@ export default function HomePage() {
           </div>
           
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
-            Find what matters
-          </h1>
-          <div className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 leading-tight">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-400">
+            <span className="block sm:inline">Find what matters</span>{" "}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-400 whitespace-nowrap">
               in any{" "}
               <span
                 className={`inline-block transition-opacity duration-200 ${
                   isAnimating ? "opacity-0" : "opacity-100"
                 }`}
-                style={{ minWidth: "180px" }}
               >
                 {rotatingWords[currentIndex]}
               </span>
             </span>
-          </div>
+          </h1>
           
           <p className="text-xl text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
             Upload any document and instantly find the parts that actually matter to you. 
