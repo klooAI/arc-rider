@@ -45,7 +45,7 @@ export default function HomePage() {
           
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-2 sm:mb-6 leading-tight">
             Find what matters{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-400">
+            <span className="hidden sm:inline text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-400">
               in any
             </span>
           </h1>
@@ -57,7 +57,7 @@ export default function HomePage() {
                   index === currentIndex ? "opacity-100" : "opacity-0"
                 }`}
               >
-                {word}
+                <span className="sm:hidden">in any </span>{word}
               </span>
             ))}
           </div>
