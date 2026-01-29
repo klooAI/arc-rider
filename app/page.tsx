@@ -44,6 +44,8 @@ export default function V2Page() {
   const [pageStart, setPageStart] = useState("");
   const [pageEnd, setPageEnd] = useState("");
   const [directSummarizing, setDirectSummarizing] = useState(false);
+  
+  const [suggestedTopics, setSuggestedTopics] = useState("");
 
   const MAX_FILE_SIZE = 50 * 1024 * 1024;
 
@@ -71,6 +73,7 @@ export default function V2Page() {
       setDocument(null);
       setResults([]);
       setSummary("");
+      setSuggestedTopics("");
     },
     [validateFile]
   );
@@ -151,6 +154,24 @@ export default function V2Page() {
         totalPages,
         ready: true,
       });
+
+      // Get suggested search topics based on the book
+      try {
+        const suggestRes = await fetch("/v2/api/suggest-topics", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ 
+            fileName: file.name, 
+            sampleText: chunks.slice(0, 5).join("\n\n") 
+          }),
+        });
+        const suggestData = await suggestRes.json();
+        if (suggestData.suggestions) {
+          setSuggestedTopics(suggestData.suggestions);
+        }
+      } catch {
+        // Ignore suggestion errors
+      }
     } catch (err: any) {
       console.error(err);
       setError(err?.message || "Failed to process document");
@@ -416,7 +437,7 @@ export default function V2Page() {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                  placeholder="e.g., investment strategies, time management, dealing with stress..."
+                  placeholder={suggestedTopics ? `e.g., ${suggestedTopics}` : "e.g., key themes, main arguments, practical tips..."}
                   className="flex-1 px-4 py-3.5 bg-slate-900/50 border border-slate-600 rounded-xl text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition"
                   data-testid="input-query"
                 />
