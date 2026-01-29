@@ -296,7 +296,7 @@ export default function V2Page() {
             </span>
           </div>
           <p className="text-slate-400 text-lg">
-            Find exactly what matters in any document
+            Focus on the things that matter.
           </p>
           <a
             href="/"
