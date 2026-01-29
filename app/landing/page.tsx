@@ -113,7 +113,7 @@ export default function LandingPage() {
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-white mb-1">Semantic search</h3>
-                <p className="text-slate-400">Search by themes, emotions, or concepts. Look for "jealousy," "fear of failure," or "building trust" and find every relevant section, even if those exact words never appear.</p>
+                <p className="text-slate-400">Search with keywords, themes, emotions, or abstract concepts. The AI understands meaning, so you'll find relevant sections even when the exact words don't appear.</p>
               </div>
             </div>
             
