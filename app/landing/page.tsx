@@ -18,9 +18,9 @@ export default function LandingPage() {
           </div>
           
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
-            Stop reading books you{" "}
+            Find what matters{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-400">
-              don't care about
+              in any book
             </span>
           </h1>
           
@@ -51,7 +51,7 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-              Books are too long. Life is too short.
+              Start with what's relevant to you.
             </h2>
             <p className="text-lg text-slate-400 max-w-2xl mx-auto">
               You bought the book. You want to learn. But 300 pages feels impossible when only 20 pages actually matter to you right now.
