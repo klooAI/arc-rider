@@ -287,7 +287,45 @@ export default function V2Page() {
       let textsToSummarize: string[] = [];
 
       if (directSummaryMode === "full") {
-        textsToSummarize = document.chunks.slice(0, 50);
+        // Distributed sampling across 5 zones for representative summary
+        const chunks = document.chunks;
+        const totalChunks = chunks.length;
+        
+        if (totalChunks <= 25) {
+          // Small document: use all chunks
+          textsToSummarize = chunks;
+        } else {
+          // Define 5 zones by position percentage
+          const zones = [
+            { start: 0, end: 0.10 },    // Zone A: 0-10%
+            { start: 0.10, end: 0.30 }, // Zone B: 10-30%
+            { start: 0.30, end: 0.60 }, // Zone C: 30-60%
+            { start: 0.60, end: 0.90 }, // Zone D: 60-90%
+            { start: 0.90, end: 1.0 },  // Zone E: 90-100%
+          ];
+          
+          const chunksPerZone = 5;
+          const sampledChunks: string[] = [];
+          
+          for (const zone of zones) {
+            const zoneStart = Math.floor(totalChunks * zone.start);
+            const zoneEnd = Math.floor(totalChunks * zone.end);
+            const zoneChunks = chunks.slice(zoneStart, zoneEnd);
+            
+            if (zoneChunks.length <= chunksPerZone) {
+              // Zone has fewer chunks than needed, take all
+              sampledChunks.push(...zoneChunks);
+            } else {
+              // Evenly sample from the zone
+              const step = Math.floor(zoneChunks.length / chunksPerZone);
+              for (let i = 0; i < chunksPerZone; i++) {
+                sampledChunks.push(zoneChunks[i * step]);
+              }
+            }
+          }
+          
+          textsToSummarize = sampledChunks.slice(0, 25); // Cap at 25
+        }
       } else {
         const start = parseInt(pageStart) || 1;
         const end = parseInt(pageEnd) || start;
