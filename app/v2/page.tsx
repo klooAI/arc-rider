@@ -54,7 +54,7 @@ export default function V2Page() {
       return "Please upload a PDF, DOCX, or EPUB file.";
     }
     if (f.size > MAX_FILE_SIZE) {
-      return "File too large. Maximum size is 200MB.";
+      return "This file is too large. Please upload a file under 100MB.";
     }
     return null;
   }, []);
@@ -362,7 +362,7 @@ export default function V2Page() {
                     {file ? file.name : "Drop your document here"}
                   </p>
                   <p className="text-sm text-slate-500">
-                    {file ? `${(file.size / 1024 / 1024).toFixed(1)} MB` : "PDF, DOCX, or EPUB • Max 200MB"}
+                    {file ? `${(file.size / 1024 / 1024).toFixed(1)} MB` : "PDF, DOCX, or EPUB • Max 100MB"}
                   </p>
                 </div>
 

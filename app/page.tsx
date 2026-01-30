@@ -250,7 +250,7 @@ export default function HomePage() {
                 1
               </div>
               <h3 className="text-xl font-semibold text-white mb-2">Upload</h3>
-              <p className="text-slate-400">Drop your PDF, EPUB, or DOCX. We support books up to 200MB.</p>
+              <p className="text-slate-400">Drop your PDF, EPUB, or DOCX. We support books up to 100MB.</p>
             </div>
             
             <div className="text-center">
