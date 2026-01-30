@@ -246,6 +246,7 @@ export default function V2Page() {
     setSummarizing(true);
     setSummary("");
     setError(null);
+    setShowResults(false); // Collapse sections so summary is visible
 
     try {
       const topTexts = results.slice(0, 8).map((r) => r.sampleText);
