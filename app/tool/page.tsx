@@ -176,15 +176,19 @@ export default function V2Page() {
       }
     } catch (err: any) {
       console.error("Document processing error:", err);
-      const msg = err?.message || "";
-      if (msg.includes("No content found")) {
+      const msg = (err?.message || "").toLowerCase();
+      if (msg.includes("no content") || msg.includes("empty")) {
         setError("We couldn't find any readable text in this document. ArcRider works with text-based PDFs, books, and papers.");
-      } else if (msg.includes("Extraction failed") || msg.includes("extract")) {
+      } else if (msg.includes("extraction") || msg.includes("extract") || msg.includes("parse")) {
         setError("We had trouble reading this document. Please make sure it's not corrupted or password-protected.");
-      } else if (msg.includes("Indexing failed") || msg.includes("embedding")) {
-        setError("Something went wrong while preparing your document. Please try again.");
+      } else if (msg.includes("index") || msg.includes("embedding") || msg.includes("rate") || msg.includes("limit")) {
+        setError("We're experiencing high demand. Please try again in a moment.");
+      } else if (msg.includes("timeout") || msg.includes("network") || msg.includes("fetch")) {
+        setError("The connection timed out. Please check your internet and try again.");
+      } else if (msg.includes("too large") || msg.includes("size")) {
+        setError("This document is too large to process. Try a smaller file.");
       } else {
-        setError("Something went wrong. Please try again or use a different file.");
+        setError("We had trouble processing this document. Please try a different file.");
       }
     } finally {
       setExtracting(false);
