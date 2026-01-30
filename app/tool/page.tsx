@@ -252,12 +252,12 @@ export default function V2Page() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Summary failed");
+      if (!res.ok) throw new Error(data.error || "Preview generation issue");
 
       setSummary(data.summary || "");
     } catch (err: any) {
       console.error("Summary error:", err);
-      setError("We couldn't create a summary right now. Please try again.");
+      setError("We couldn't generate a quick overview right now.");
     } finally {
       setSummarizing(false);
     }
@@ -308,12 +308,12 @@ export default function V2Page() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Summary failed");
+      if (!res.ok) throw new Error(data.error || "Preview generation issue");
 
       setSummary(data.summary || "");
     } catch (err: any) {
       console.error("Direct summary error:", err);
-      setError("We couldn't create a summary right now. Please try again.");
+      setError("We couldn't generate a quick overview right now.");
     } finally {
       setDirectSummarizing(false);
     }
