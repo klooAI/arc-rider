@@ -491,9 +491,25 @@ export default function V2Page() {
         {document?.ready && (
           <div className="mt-8 space-y-6">
             <div className="bg-slate-800/50 backdrop-blur rounded-2xl border border-slate-700 p-6">
-              <label className="block text-lg font-semibold text-white mb-4">
-                What are you looking for?
-              </label>
+              <div className="flex items-center justify-between mb-4">
+                <label className="text-lg font-semibold text-white">
+                  What are you looking for?
+                </label>
+                <button
+                  onClick={() => {
+                    setDocument(null);
+                    setFile(null);
+                    setResults([]);
+                    setSummary("");
+                    setQuery("");
+                    setError(null);
+                  }}
+                  className="text-sm text-slate-400 hover:text-violet-400 transition"
+                  data-testid="button-change-document"
+                >
+                  Change document
+                </button>
+              </div>
               <div className="flex flex-col sm:flex-row gap-3">
                 <input
                   type="text"
@@ -804,24 +820,6 @@ export default function V2Page() {
                 </button>
               </div>
             </div>
-          </div>
-        )}
-
-        {document?.ready && (
-          <div className="mt-8 text-center">
-            <button
-              onClick={() => {
-                setFile(null);
-                setDocument(null);
-                setResults([]);
-                setSummary("");
-                setQuery("");
-              }}
-              className="text-sm text-slate-500 hover:text-slate-300 transition"
-              data-testid="button-reset"
-            >
-              Upload a different document
-            </button>
           </div>
         )}
       </div>
