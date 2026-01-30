@@ -63,7 +63,7 @@ export default function AboutPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-white mb-3">For ADHD Brains</h3>
+            <h3 className="text-lg font-semibold text-white mb-3">For Neurodivergent Readers</h3>
             <p className="text-slate-400 leading-relaxed">
               Hyperfocus on what interests you. Skip the rest guilt-free. Get quick wins instead of overwhelming commitments.
             </p>
