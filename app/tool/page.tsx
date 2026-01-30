@@ -49,7 +49,7 @@ export default function V2Page() {
   
   const [suggestedTopics, setSuggestedTopics] = useState("");
 
-  const MAX_FILE_SIZE = 200 * 1024 * 1024;
+  const MAX_FILE_SIZE = 100 * 1024 * 1024;
 
   const validateFile = useCallback((f: File): string | null => {
     const name = f.name.toLowerCase();
@@ -57,7 +57,7 @@ export default function V2Page() {
       return "Please upload a PDF, DOCX, or EPUB file.";
     }
     if (f.size > MAX_FILE_SIZE) {
-      return "File too large. Maximum size is 200MB.";
+      return "This file is too large. Please use a file under 100MB.";
     }
     return null;
   }, []);
@@ -175,8 +175,17 @@ export default function V2Page() {
         // Ignore suggestion errors
       }
     } catch (err: any) {
-      console.error(err);
-      setError(err?.message || "Failed to process document");
+      console.error("Document processing error:", err);
+      const msg = err?.message || "";
+      if (msg.includes("No content found")) {
+        setError("We couldn't find any text in this document. Please try a different file.");
+      } else if (msg.includes("Extraction failed") || msg.includes("extract")) {
+        setError("We had trouble reading this document. Please make sure it's not corrupted or password-protected.");
+      } else if (msg.includes("Indexing failed") || msg.includes("embedding")) {
+        setError("Something went wrong while preparing your document. Please try again.");
+      } else {
+        setError("Something went wrong. Please try again or use a different file.");
+      }
     } finally {
       setExtracting(false);
       setEmbedding(false);
@@ -214,8 +223,8 @@ export default function V2Page() {
       setTotalMatches(data.totalMatches || 0);
       setQueryInterpretation(data.interpretation || query.trim());
     } catch (err: any) {
-      console.error(err);
-      setError(err?.message || "Search failed");
+      console.error("Search error:", err);
+      setError("We couldn't complete your search. Please try again.");
     } finally {
       setSearching(false);
     }
@@ -241,8 +250,8 @@ export default function V2Page() {
 
       setSummary(data.summary || "");
     } catch (err: any) {
-      console.error(err);
-      setError(err?.message || "Failed to generate summary");
+      console.error("Summary error:", err);
+      setError("We couldn't create a summary right now. Please try again.");
     } finally {
       setSummarizing(false);
     }
@@ -297,8 +306,8 @@ export default function V2Page() {
 
       setSummary(data.summary || "");
     } catch (err: any) {
-      console.error(err);
-      setError(err?.message || "Failed to generate summary");
+      console.error("Direct summary error:", err);
+      setError("We couldn't create a summary right now. Please try again.");
     } finally {
       setDirectSummarizing(false);
     }
@@ -371,7 +380,7 @@ export default function V2Page() {
                     {file ? file.name : "Upload your material"}
                   </p>
                   <p className="text-sm text-slate-500">
-                    {file ? `${(file.size / 1024 / 1024).toFixed(1)} MB` : "PDF, DOCX, or EPUB • Max 200MB"}
+                    {file ? `${(file.size / 1024 / 1024).toFixed(1)} MB` : "PDF, DOCX, or EPUB • Max 100MB"}
                   </p>
                 </div>
 
