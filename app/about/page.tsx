@@ -65,7 +65,7 @@ export default function AboutPage() {
             </div>
             <h3 className="text-lg font-semibold text-white mb-3">For Neurodivergent Readers</h3>
             <p className="text-slate-400 leading-relaxed">
-              Hyperfocus on what interests you. Skip the rest guilt-free. Get quick wins instead of overwhelming commitments.
+              Inspired by ADHD, ArcRider helps you hyperfocus on what interests you. Skip the rest guilt-free. Get quick wins instead of overwhelming commitments.
             </p>
           </div>
         </div>
