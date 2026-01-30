@@ -178,7 +178,7 @@ export default function V2Page() {
       console.error("Document processing error:", err);
       const msg = err?.message || "";
       if (msg.includes("No content found")) {
-        setError("We couldn't find any text in this document. Please try a different file.");
+        setError("We couldn't find any readable text in this document. ArcRider works with text-based PDFs, books, and papers.");
       } else if (msg.includes("Extraction failed") || msg.includes("extract")) {
         setError("We had trouble reading this document. Please make sure it's not corrupted or password-protected.");
       } else if (msg.includes("Indexing failed") || msg.includes("embedding")) {
