@@ -57,7 +57,7 @@ export default function V2Page() {
       return "Please upload a PDF, DOCX, or EPUB file.";
     }
     if (f.size > MAX_FILE_SIZE) {
-      return "This file is too large. ArcRider works best with text-based documents under 100MB.";
+      return "This file is too large. Please upload a file under 100MB.";
     }
     return null;
   }, []);
