@@ -57,7 +57,7 @@ export default function V2Page() {
       return "Please upload a PDF, DOCX, or EPUB file.";
     }
     if (f.size > MAX_FILE_SIZE) {
-      return "File too large. Maximum size is 50MB.";
+      return "File too large. Maximum size is 200MB.";
     }
     return null;
   }, []);
@@ -378,7 +378,7 @@ export default function V2Page() {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept=".pdf,.docx,.epub"
+                  accept=".pdf,.docx,.epub,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/epub+zip"
                   onChange={(e) => handleFileSelect(e.target.files?.[0] || null)}
                   className="hidden"
                   data-testid="file-input"
