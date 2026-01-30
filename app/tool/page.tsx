@@ -219,12 +219,18 @@ export default function V2Page() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Search failed");
 
-      setResults(data.groups || []);
+      const groups = data.groups || [];
+      setResults(groups);
       setTotalMatches(data.totalMatches || 0);
       setQueryInterpretation(data.interpretation || query.trim());
+      
+      // Search succeeded but found no relevant sections
+      if (groups.length === 0) {
+        setError("We couldn't find sections related to that in this document.");
+      }
     } catch (err: any) {
       console.error("Search error:", err);
-      setError("We couldn't complete your search. Please try again.");
+      setError("We ran into a temporary issue while searching. Please try again.");
     } finally {
       setSearching(false);
     }
