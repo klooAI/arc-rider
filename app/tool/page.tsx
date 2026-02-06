@@ -157,7 +157,6 @@ export default function V2Page() {
         ready: true,
       });
 
-      // Get suggested search topics based on the book
       try {
         const suggestRes = await fetch("/v2/api/suggest-topics", {
           method: "POST",
@@ -172,7 +171,6 @@ export default function V2Page() {
           setSuggestedTopics(suggestData.suggestions);
         }
       } catch {
-        // Ignore suggestion errors
       }
     } catch (err: any) {
       console.error("Document processing error:", err);
@@ -228,7 +226,6 @@ export default function V2Page() {
       setTotalMatches(data.totalMatches || 0);
       setQueryInterpretation(data.interpretation || query.trim());
       
-      // Search succeeded but found no relevant sections
       if (groups.length === 0) {
         setError("We couldn't find sections related to that in this document.");
       }
@@ -246,7 +243,7 @@ export default function V2Page() {
     setSummarizing(true);
     setSummary("");
     setError(null);
-    setShowResults(false); // Collapse sections so summary is visible
+    setShowResults(false);
 
     try {
       const topTexts = results.slice(0, 8).map((r) => r.sampleText);
@@ -273,7 +270,7 @@ export default function V2Page() {
     if (group.startPage === group.endPage) {
       return `${label} ${group.startPage}`;
     }
-    return `${label}s ${group.startPage}–${group.endPage}`;
+    return `${label}s ${group.startPage}\u2013${group.endPage}`;
   }
 
   async function handleDirectSummary() {
@@ -287,21 +284,18 @@ export default function V2Page() {
       let textsToSummarize: string[] = [];
 
       if (directSummaryMode === "full") {
-        // Distributed sampling across 5 zones for representative summary
         const chunks = document.chunks;
         const totalChunks = chunks.length;
         
         if (totalChunks <= 25) {
-          // Small document: use all chunks
           textsToSummarize = chunks;
         } else {
-          // Define 5 zones by position percentage
           const zones = [
-            { start: 0, end: 0.10 },    // Zone A: 0-10%
-            { start: 0.10, end: 0.30 }, // Zone B: 10-30%
-            { start: 0.30, end: 0.60 }, // Zone C: 30-60%
-            { start: 0.60, end: 0.90 }, // Zone D: 60-90%
-            { start: 0.90, end: 1.0 },  // Zone E: 90-100%
+            { start: 0, end: 0.10 },
+            { start: 0.10, end: 0.30 },
+            { start: 0.30, end: 0.60 },
+            { start: 0.60, end: 0.90 },
+            { start: 0.90, end: 1.0 },
           ];
           
           const chunksPerZone = 5;
@@ -313,10 +307,8 @@ export default function V2Page() {
             const zoneChunks = chunks.slice(zoneStart, zoneEnd);
             
             if (zoneChunks.length <= chunksPerZone) {
-              // Zone has fewer chunks than needed, take all
               sampledChunks.push(...zoneChunks);
             } else {
-              // Evenly sample from the zone
               const step = Math.floor(zoneChunks.length / chunksPerZone);
               for (let i = 0; i < chunksPerZone; i++) {
                 sampledChunks.push(zoneChunks[i * step]);
@@ -324,7 +316,7 @@ export default function V2Page() {
             }
           }
           
-          textsToSummarize = sampledChunks.slice(0, 25); // Cap at 25
+          textsToSummarize = sampledChunks.slice(0, 25);
         }
       } else {
         const start = parseInt(pageStart) || 1;
@@ -363,40 +355,35 @@ export default function V2Page() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      <div className="max-w-3xl mx-auto px-4 py-12">
-        <header className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            </div>
-            <h1 className="text-3xl font-bold text-white" data-testid="title">
+    <div className="min-h-screen bg-ink">
+      <div className="max-w-[680px] mx-auto px-5 sm:px-8 py-12">
+        <header className="text-center mb-10">
+          <div className="inline-flex items-center gap-2.5 mb-3">
+            <h1 className="font-serif text-2xl font-bold text-bone tracking-tight" data-testid="title">
               ArcRider
             </h1>
-            <span className="px-2 py-0.5 text-xs font-bold bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white rounded-full">
+            <span className="px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase bg-iris/15 text-iris rounded">
               V2
             </span>
           </div>
-          <p className="text-slate-400 text-lg">
+          <p className="text-ash text-base">
             Focus on the things that matter.
           </p>
           <a
             href="/v1"
-            className="mt-3 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-300 transition"
+            className="mt-2 inline-flex items-center gap-1 text-xs text-dusk hover:text-ash transition-colors"
           >
             Use V1 (slower)
           </a>
         </header>
 
         <div
-          className={`relative p-8 rounded-2xl border-2 border-dashed transition-all duration-300 ${
+          className={`relative p-8 rounded-xl border transition-all duration-200 ${
             isDragging
-              ? "border-violet-400 bg-violet-500/10"
+              ? "border-iris bg-iris/5"
               : document?.ready
-              ? "border-emerald-400/50 bg-emerald-500/5"
-              : "border-slate-600 bg-slate-800/50 hover:border-slate-500"
+              ? "border-sage/40 bg-sage/5"
+              : "border-border bg-graphite hover:border-ash/30"
           }`}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
@@ -406,30 +393,30 @@ export default function V2Page() {
           <div className="flex flex-col items-center gap-5">
             {document?.ready ? (
               <div className="text-center">
-                <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 rounded-full text-sm font-medium mb-3">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-sage/10 border border-sage/20 text-sage rounded text-xs font-medium mb-3">
+                  <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  Indexed & Ready
+                  Indexed &amp; Ready
                 </div>
-                <p className="font-semibold text-white text-lg break-all line-clamp-2 max-w-full">{document.fileName}</p>
-                <p className="text-sm text-slate-400 mt-1">
-                  {document.totalPages} pages • {document.chunks.length} searchable sections
+                <p className="font-semibold text-bone text-lg break-all line-clamp-2 max-w-full">{document.fileName}</p>
+                <p className="text-xs text-ash mt-1">
+                  {document.totalPages} pages &middot; {document.chunks.length} searchable sections
                 </p>
               </div>
             ) : (
               <>
-                <div className="w-16 h-16 rounded-2xl bg-slate-700/50 flex items-center justify-center">
-                  <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-14 h-14 rounded-lg bg-elevated border border-border flex items-center justify-center">
+                  <svg className="w-7 h-7 text-dusk" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                 </div>
                 <div className="text-center">
-                  <p className="font-medium text-white mb-1">
+                  <p className="font-medium text-bone mb-1">
                     {file ? file.name : "Upload your material"}
                   </p>
-                  <p className="text-sm text-slate-500">
-                    {file ? `${(file.size / 1024 / 1024).toFixed(1)} MB` : "PDF, DOCX, or EPUB • Max 100MB"}
+                  <p className="text-xs text-dusk">
+                    {file ? `${(file.size / 1024 / 1024).toFixed(1)} MB` : "PDF, DOCX, or EPUB \u00b7 Max 100MB"}
                   </p>
                 </div>
 
@@ -445,7 +432,7 @@ export default function V2Page() {
                 <div className="flex gap-3">
                   <button
                     onClick={() => fileInputRef.current?.click()}
-                    className="px-5 py-2.5 font-medium text-slate-300 bg-slate-700 border border-slate-600 rounded-xl hover:bg-slate-600 transition"
+                    className="px-5 py-2.5 text-sm font-medium text-ash bg-elevated border border-border rounded-lg hover:text-bone hover:border-ash/30 active:scale-[0.98] transition-all"
                     data-testid="button-browse"
                   >
                     Browse files
@@ -455,7 +442,7 @@ export default function V2Page() {
                     <button
                       onClick={processDocument}
                       disabled={extracting || embedding}
-                      className="px-5 py-2.5 font-medium text-white bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-xl hover:from-violet-500 hover:to-fuchsia-500 disabled:opacity-50 transition shadow-lg shadow-violet-500/25"
+                      className="px-5 py-2.5 text-sm font-medium text-ink bg-ember rounded-lg hover:bg-ember-hover disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-all"
                       data-testid="button-process"
                     >
                       {extracting ? "Reading document..." : embedding ? "Preparing..." : "Upload Document"}
@@ -467,13 +454,13 @@ export default function V2Page() {
 
             {(extracting || embedding) && (
               <div className="w-full max-w-sm mt-2">
-                <div className="flex items-center gap-2 text-sm text-slate-400 mb-2">
-                  <div className="w-2 h-2 rounded-full bg-violet-500 animate-pulse" />
+                <div className="flex items-center gap-2 text-xs text-ash mb-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-iris animate-pulse" />
                   <span>{progress.step}</span>
                 </div>
-                <div className="w-full bg-slate-700 rounded-full h-1.5 overflow-hidden">
+                <div className="w-full bg-elevated rounded-full h-1 overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-violet-500 to-fuchsia-500 transition-all duration-500"
+                    className="h-full bg-iris transition-all duration-500"
                     style={{ width: `${progress.percent}%` }}
                   />
                 </div>
@@ -481,18 +468,18 @@ export default function V2Page() {
             )}
 
             {error && (
-              <div className="w-full max-w-sm p-4 bg-red-500/10 border border-red-500/30 rounded-xl" data-testid="error-message">
-                <p className="text-sm text-red-400">{error}</p>
+              <div className="w-full max-w-sm p-4 bg-coral/5 border border-coral/20 rounded-lg" data-testid="error-message">
+                <p className="text-sm text-coral">{error}</p>
               </div>
             )}
           </div>
         </div>
 
         {document?.ready && (
-          <div className="mt-8 space-y-6">
-            <div className="bg-slate-800/50 backdrop-blur rounded-2xl border border-slate-700 p-6">
+          <div className="mt-8 space-y-5">
+            <div className="bg-graphite rounded-xl border border-border p-6">
               <div className="flex items-center justify-between mb-4">
-                <label className="text-lg font-semibold text-white">
+                <label className="text-base font-semibold text-bone">
                   What are you looking for?
                 </label>
                 <button
@@ -504,7 +491,7 @@ export default function V2Page() {
                     setQuery("");
                     setError(null);
                   }}
-                  className="text-sm text-slate-400 hover:text-violet-400 transition"
+                  className="text-xs text-dusk hover:text-iris transition-colors"
                   data-testid="button-change-document"
                 >
                   Change document
@@ -517,18 +504,18 @@ export default function V2Page() {
                   onChange={(e) => setQuery(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                   placeholder={suggestedTopics ? `e.g., ${suggestedTopics}` : "e.g., key themes, main arguments, practical tips..."}
-                  className="flex-1 px-4 py-3.5 bg-slate-900/50 border border-slate-600 rounded-xl text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition"
+                  className="flex-1 px-4 py-3 bg-elevated border border-border rounded-lg text-bone text-sm placeholder:text-dusk focus:outline-none focus:ring-2 focus:ring-iris/50 focus:border-iris/50 transition"
                   data-testid="input-query"
                 />
                 <button
                   onClick={handleSearch}
                   disabled={searching || !query.trim()}
-                  className="px-6 py-3.5 font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl hover:from-emerald-400 hover:to-teal-400 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-lg shadow-emerald-500/25 whitespace-nowrap"
+                  className="px-5 py-3 text-sm font-semibold text-ink bg-ember rounded-lg hover:bg-ember-hover disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-all whitespace-nowrap"
                   data-testid="button-search"
                 >
                   {searching ? (
                     <span className="flex items-center justify-center gap-2">
-                      <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                       </svg>
@@ -542,16 +529,16 @@ export default function V2Page() {
             </div>
 
             {(searching || results.length > 0) && submittedQuery && (
-              <div className="flex items-start gap-2 px-4 py-3 bg-slate-800/30 border border-slate-700/50 rounded-xl text-sm">
-                <svg className="w-4 h-4 text-violet-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex items-start gap-2.5 px-4 py-3 bg-elevated border border-border rounded-lg text-sm">
+                <svg className="w-4 h-4 text-iris flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
-                <span className="text-slate-300">
+                <span className="text-ash">
                   {searching ? (
                     `Searching for "${submittedQuery}"...`
                   ) : (
                     <>
-                      <span className="font-semibold text-white">Exploring:</span>{" "}
+                      <span className="font-semibold text-bone">Exploring:</span>{" "}
                       {queryInterpretation || submittedQuery}
                     </>
                   )}
@@ -560,20 +547,20 @@ export default function V2Page() {
             )}
 
             {results.length > 0 && (
-              <div className="bg-slate-800/50 backdrop-blur rounded-2xl border border-slate-700 overflow-hidden">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 sm:p-5 border-b border-slate-700">
+              <div className="bg-graphite rounded-xl border border-border overflow-hidden">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 sm:p-5 border-b border-border">
                   <button
                     onClick={() => setShowResults(!showResults)}
                     className="flex items-center gap-3 text-left"
                   >
-                    <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 font-bold text-sm flex-shrink-0">
+                    <span className="flex items-center justify-center w-7 h-7 rounded-md bg-sage/10 text-sage font-bold text-xs flex-shrink-0">
                       {results.length}
                     </span>
-                    <span className="text-white font-semibold text-sm sm:text-base">
+                    <span className="text-bone font-semibold text-sm">
                       Relevant sections found
                     </span>
                     <svg
-                      className={`w-5 h-5 text-slate-400 transition-transform flex-shrink-0 ${showResults ? "rotate-180" : ""}`}
+                      className={`w-4 h-4 text-dusk transition-transform flex-shrink-0 ${showResults ? "rotate-180" : ""}`}
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -584,7 +571,7 @@ export default function V2Page() {
                   <button
                     onClick={handleSummarize}
                     disabled={summarizing}
-                    className="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-lg hover:from-violet-400 hover:to-fuchsia-400 disabled:opacity-50 transition whitespace-nowrap self-start sm:self-auto"
+                    className="px-4 py-2 text-xs font-semibold text-bone bg-iris/15 border border-iris/20 rounded-lg hover:bg-iris/25 disabled:opacity-40 transition-all whitespace-nowrap self-start sm:self-auto"
                     data-testid="button-summarize"
                   >
                     {summarizing ? "Summarizing..." : "Summarize these"}
@@ -592,22 +579,22 @@ export default function V2Page() {
                 </div>
 
                 {showResults && (
-                  <div className="divide-y divide-slate-700/50">
+                  <div className="divide-y divide-border">
                     {results.map((group, idx) => (
                       <div
                         key={`${group.startPage}-${idx}`}
-                        className="p-5 hover:bg-slate-700/20 transition"
+                        className="p-5 hover:bg-elevated/50 transition-colors"
                         data-testid={`result-item-${idx}`}
                       >
                         <div className="flex items-start justify-between gap-4 mb-2">
-                          <h3 className="text-lg font-bold text-white">
+                          <h3 className="text-base font-bold text-bone">
                             {formatPageRange(group)}
                           </h3>
-                          <span className="flex-shrink-0 px-3 py-1 text-sm font-bold rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                          <span className="flex-shrink-0 px-2.5 py-0.5 text-xs font-bold rounded bg-sage/10 text-sage border border-sage/20">
                             {group.score}%
                           </span>
                         </div>
-                        <p className="text-slate-300 leading-relaxed">
+                        <p className="text-sm text-ash leading-relaxed">
                           {group.description}
                         </p>
                       </div>
@@ -618,14 +605,14 @@ export default function V2Page() {
             )}
 
             {summary && (
-              <div className="space-y-6">
+              <div className="space-y-5">
                 {(() => {
                   const lines = summary.split("\n").filter(Boolean);
                   const tldrIdx = lines.findIndex(l => l.toLowerCase().includes("tl;dr") || l.toLowerCase().includes("tldr"));
                   const summaryIdx = lines.findIndex(l => l.toLowerCase().match(/^#+?\s*(summary|detailed)/i));
                   
                   const tldrLines = tldrIdx !== -1 
-                    ? lines.slice(tldrIdx + 1, summaryIdx !== -1 ? summaryIdx : undefined).filter(l => l.trim().startsWith("-") || l.trim().startsWith("•") || l.trim().match(/^\d+\./))
+                    ? lines.slice(tldrIdx + 1, summaryIdx !== -1 ? summaryIdx : undefined).filter(l => l.trim().startsWith("-") || l.trim().startsWith("\u2022") || l.trim().match(/^\d+\./))
                     : [];
                   
                   const summaryLines = summaryIdx !== -1 
@@ -635,25 +622,21 @@ export default function V2Page() {
                   return (
                     <>
                       {tldrLines.length > 0 && (
-                        <div className="bg-gradient-to-br from-emerald-500/10 to-teal-500/10 rounded-2xl border border-emerald-500/30 p-6">
-                          <h3 className="text-lg font-bold text-white mb-5 flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-                              <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                              </svg>
-                            </div>
+                        <div className="bg-graphite rounded-xl border border-sage/20 p-6">
+                          <h3 className="text-base font-bold text-bone mb-4 flex items-center gap-2.5">
+                            <div className="w-1.5 h-1.5 rounded-full bg-sage" />
                             TL;DR
                           </h3>
                           <ul className="space-y-3">
                             {tldrLines.map((line, i) => {
-                              const text = line.replace(/^[-•]\s*/, "").replace(/^\d+\.\s*/, "").trim();
+                              const text = line.replace(/^[-\u2022]\s*/, "").replace(/^\d+\.\s*/, "").trim();
                               const parts = text.split(/\*\*(.+?)\*\*/g);
                               return (
                                 <li key={i} className="flex items-start gap-3">
-                                  <span className="mt-2 w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0" />
-                                  <span className="text-slate-200 leading-relaxed">
+                                  <span className="mt-2 w-1.5 h-1.5 rounded-full bg-sage/60 flex-shrink-0" />
+                                  <span className="text-sm text-ash leading-relaxed">
                                     {parts.map((part, j) => 
-                                      j % 2 === 1 ? <strong key={j} className="text-white font-semibold">{part}</strong> : part
+                                      j % 2 === 1 ? <strong key={j} className="text-bone font-semibold">{part}</strong> : part
                                     )}
                                   </span>
                                 </li>
@@ -664,34 +647,30 @@ export default function V2Page() {
                       )}
 
                       {summaryLines.length > 0 && (
-                        <div className="bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10 rounded-2xl border border-violet-500/30 p-6">
-                          <h3 className="text-lg font-bold text-white mb-5 flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-lg bg-violet-500/20 flex items-center justify-center">
-                              <svg className="w-4 h-4 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                              </svg>
-                            </div>
+                        <div className="bg-graphite rounded-xl border border-iris/20 p-6">
+                          <h3 className="text-base font-bold text-bone mb-4 flex items-center gap-2.5">
+                            <div className="w-1.5 h-1.5 rounded-full bg-iris" />
                             Detailed Summary
                           </h3>
-                          <div className="space-y-4">
+                          <div className="space-y-3">
                             {summaryLines.map((line, i) => {
-                              const isBullet = line.trim().startsWith("-") || line.trim().startsWith("•") || line.trim().match(/^\d+\./);
-                              const text = line.replace(/^[-•]\s*/, "").replace(/^\d+\.\s*/, "").trim();
+                              const isBullet = line.trim().startsWith("-") || line.trim().startsWith("\u2022") || line.trim().match(/^\d+\./);
+                              const text = line.replace(/^[-\u2022]\s*/, "").replace(/^\d+\.\s*/, "").trim();
                               const parts = text.split(/\*\*(.+?)\*\*/g);
                               const renderText = parts.map((part, j) => 
-                                j % 2 === 1 ? <strong key={j} className="text-white font-semibold">{part}</strong> : part
+                                j % 2 === 1 ? <strong key={j} className="text-bone font-semibold">{part}</strong> : part
                               );
                               
                               if (isBullet) {
                                 return (
-                                  <div key={i} className="flex items-start gap-3 pl-2">
-                                    <span className="mt-2 w-1.5 h-1.5 rounded-full bg-violet-400 flex-shrink-0" />
-                                    <span className="text-slate-300 leading-relaxed">{renderText}</span>
+                                  <div key={i} className="flex items-start gap-3 pl-1">
+                                    <span className="mt-2 w-1.5 h-1.5 rounded-full bg-iris/50 flex-shrink-0" />
+                                    <span className="text-sm text-ash leading-relaxed">{renderText}</span>
                                   </div>
                                 );
                               }
                               return (
-                                <p key={i} className="text-slate-300 leading-relaxed">
+                                <p key={i} className="text-sm text-ash leading-relaxed">
                                   {renderText}
                                 </p>
                               );
@@ -701,20 +680,18 @@ export default function V2Page() {
                       )}
 
                       {tldrLines.length === 0 && summaryLines.length === 0 && (
-                        <div className="bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10 rounded-2xl border border-violet-500/30 p-6">
-                          <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                            <svg className="w-5 h-5 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
+                        <div className="bg-graphite rounded-xl border border-iris/20 p-6">
+                          <h3 className="text-base font-bold text-bone mb-4 flex items-center gap-2.5">
+                            <div className="w-1.5 h-1.5 rounded-full bg-iris" />
                             Summary
                           </h3>
                           <div className="space-y-3">
                             {lines.map((line, i) => {
                               const parts = line.split(/\*\*(.+?)\*\*/g);
                               return (
-                                <p key={i} className="text-slate-300 leading-relaxed">
+                                <p key={i} className="text-sm text-ash leading-relaxed">
                                   {parts.map((part, j) => 
-                                    j % 2 === 1 ? <strong key={j} className="text-white font-semibold">{part}</strong> : part
+                                    j % 2 === 1 ? <strong key={j} className="text-bone font-semibold">{part}</strong> : part
                                   )}
                                 </p>
                               );
@@ -730,38 +707,34 @@ export default function V2Page() {
 
             {!searching && results.length === 0 && query && (
               <div className="text-center py-12">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-700/50 flex items-center justify-center">
-                  <svg className="w-8 h-8 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-14 h-14 mx-auto mb-4 rounded-lg bg-elevated border border-border flex items-center justify-center">
+                  <svg className="w-7 h-7 text-dusk" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                 </div>
-                <p className="text-slate-400">No relevant sections found. Try different search terms.</p>
+                <p className="text-sm text-ash">No relevant sections found. Try different search terms.</p>
               </div>
             )}
 
-            <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur rounded-2xl border border-slate-700/50 p-6">
+            <div className="bg-graphite rounded-xl border border-border p-6">
               <div className="flex items-center gap-3 mb-5">
-                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 flex items-center justify-center border border-violet-500/30">
-                  <svg className="w-5 h-5 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                </div>
-                <h2 className="text-lg font-semibold text-white">
+                <div className="w-1.5 h-1.5 rounded-full bg-iris" />
+                <h2 className="text-base font-semibold text-bone">
                   Or summarize directly
                 </h2>
               </div>
 
               <div className="flex flex-wrap items-center justify-between gap-4">
-                <div className="flex flex-wrap items-center gap-6">
+                <div className="flex flex-wrap items-center gap-5">
                   <label className="flex items-center gap-2.5 cursor-pointer group">
                     <input
                       type="radio"
                       name="directMode"
                       checked={directSummaryMode === "full"}
                       onChange={() => setDirectSummaryMode("full")}
-                      className="w-4 h-4 text-violet-500 bg-slate-700 border-slate-600 focus:ring-violet-500 focus:ring-offset-slate-800 accent-violet-500"
+                      className="w-4 h-4 text-iris bg-elevated border-border focus:ring-iris accent-iris"
                     />
-                    <span className="text-slate-300 group-hover:text-white transition">Entire document</span>
+                    <span className="text-sm text-ash group-hover:text-bone transition-colors">Entire document</span>
                   </label>
 
                   <label className="flex items-center gap-2.5 cursor-pointer group">
@@ -770,9 +743,9 @@ export default function V2Page() {
                       name="directMode"
                       checked={directSummaryMode === "range"}
                       onChange={() => setDirectSummaryMode("range")}
-                      className="w-4 h-4 text-violet-500 bg-slate-700 border-slate-600 focus:ring-violet-500 focus:ring-offset-slate-800 accent-violet-500"
+                      className="w-4 h-4 text-iris bg-elevated border-border focus:ring-iris accent-iris"
                     />
-                    <span className="text-slate-300 group-hover:text-white transition">Page range</span>
+                    <span className="text-sm text-ash group-hover:text-bone transition-colors">Page range</span>
                   </label>
 
                   {directSummaryMode === "range" && (
@@ -784,9 +757,9 @@ export default function V2Page() {
                         value={pageStart}
                         onChange={(e) => setPageStart(e.target.value)}
                         placeholder="From"
-                        className="w-20 px-3 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent"
+                        className="w-20 px-3 py-2 bg-elevated border border-border rounded-lg text-bone text-sm placeholder:text-dusk focus:outline-none focus:ring-2 focus:ring-iris/50 focus:border-iris/50"
                       />
-                      <span className="text-slate-500 text-sm">to</span>
+                      <span className="text-dusk text-xs">to</span>
                       <input
                         type="number"
                         min="1"
@@ -794,7 +767,7 @@ export default function V2Page() {
                         value={pageEnd}
                         onChange={(e) => setPageEnd(e.target.value)}
                         placeholder="To"
-                        className="w-20 px-3 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent"
+                        className="w-20 px-3 py-2 bg-elevated border border-border rounded-lg text-bone text-sm placeholder:text-dusk focus:outline-none focus:ring-2 focus:ring-iris/50 focus:border-iris/50"
                       />
                     </div>
                   )}
@@ -803,7 +776,7 @@ export default function V2Page() {
                 <button
                   onClick={handleDirectSummary}
                   disabled={directSummarizing || summarizing}
-                  className="px-5 py-2.5 font-semibold text-white bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-xl hover:from-violet-500 hover:to-fuchsia-500 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-lg shadow-violet-500/20"
+                  className="px-5 py-2.5 text-sm font-semibold text-bone bg-iris/15 border border-iris/20 rounded-lg hover:bg-iris/25 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                   data-testid="button-direct-summary"
                 >
                   {directSummarizing ? (
